@@ -1,0 +1,43 @@
+﻿@using ValidationWeb.Filters
+@using ValidationWeb.Utility
+@model NavMenusViewModel
+@{
+    var identity = (ValidationPortalIdentity)User.Identity;
+    var permissions = User.Identity.GetViewPermissions(identity.AppRole);
+}
+
+<div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
+    <ul class="navbar-nav ml-auto">
+
+        @if (!permissions.CanAccessAdminFeatures)
+        {
+@*             $1$dropdown pull-right #1# *@
+@*             <li class="nav-item dropdown"> *@
+@*                 @if (Model.EdOrgs.Count() > 1) *@
+@*                 { *@
+@*                     <select id="edOrgNames" class="form-control validation-dropdown-menu district-dropdown" style="visibility: hidden"></select> *@
+@*                 } *@
+@*             </li> *@
+
+            <li class="nav-item">
+                @Html.DropDownList(
+                    "newActionDropdownYear",
+                    new SelectList(Model.SchoolYears
+                        .OrderBy(x => x.ToString())
+                        .Select(x => new SelectListItem
+                                     {
+                                         Text = x.ToString(),
+                                         Value = x.Id.ToString()
+                                     }),
+                        "Value",
+                        "Text",
+                        Model.FocusedSchoolYear.Id),
+                    new { @class= "form-control", style="visibility: hidden" })
+            </li>
+        }
+
+        <li class="nav-item" style="padding-left: 10px;" tabindex="0">
+            <i class="fas fa-user-circle white-heavy-text"></i> <span class="white-heavy-text">@Model.AppUserSession.UserIdentity.UserId</span>
+        </li>
+    </ul>
+</div>

@@ -1,0 +1,58 @@
+﻿@model IEnumerable<Announcement>
+
+<div class="row">
+    <div class="col-10">
+        <div id="announcement-warning" class="alert alert-danger alert-dismissible" style="display:none" role="alert">
+            <button id="announcement-warning-button" type="button" class="close" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    </div>
+    <div class="col-2">
+        <button id="announcement-add" class="btn btn-sm prime-blue white-heavy-text">Add Announcement</button>
+    </div>
+</div>
+<div class="row tbmargin10">
+    <table class="table table-sm table-responsive-md table-bordered" id="reportsTable">
+        <tr class="table-primary">
+            <th class="id-hide-column">Id</th>
+            <th>Sort Order</th>
+            <th>Message</th>
+            <th>Contact Info</th>
+            <th>Link Url</th>
+            <th>Expiration</th>
+            <th></th>
+            <th></th>
+        </tr>
+        @foreach (var announcement in Model.OrderBy(x => x.Priority))
+        {
+            <tr>
+                <td class="id-hide-column">@announcement.Id</td>
+                <td>@announcement.Priority</td>
+                <td>
+                    <span style="overflow-wrap: break-word; word-wrap: break-word; -ms-hyphens: auto; hyphens: auto;">@announcement.Message</span>
+                </td>
+                <td>@announcement.ContactInfo</td>
+                <td>
+                    <span style="overflow-wrap: break-word; word-wrap: break-word; -ms-hyphens: auto; hyphens: auto;">@announcement.LinkUrl</span>
+                </td>
+                <td>@announcement.Expiration.ToShortDateString()</td>
+                <td>
+                    <a href="javascript:void(0);"
+                       class="announcement-edit btn btn-sm prime-blue white-heavy-text" data-id="@announcement.Id">Edit</a>
+                </td>
+                <td>
+                    <a href="javascript:void(0);" data-id="@announcement.Id" class="announcement-delete btn btn-sm prime-blue white-heavy-text">Delete</a>
+                </td>
+            </tr>
+        }
+    </table>
+</div>
+
+<div id='announcementModal' class="modal fade" role="dialog" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div id='announcement-modal-content'></div>
+        </div>
+    </div>
+</div>

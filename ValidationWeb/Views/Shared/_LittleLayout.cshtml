@@ -1,0 +1,252 @@
+﻿@using MvcSiteMapProvider.Web.Html
+@using ValidationWeb
+@using ValidationWeb.ApiControllers
+@using ValidationWeb.Filters
+@using ValidationWeb.Utility
+@{
+    var identity = (ValidationPortalIdentity)User.Identity;
+    var appRoleName = identity.AppRole.Name;
+    var permissions = User.Identity.GetViewPermissions(identity.AppRole);
+
+}
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Ed-Fi Data Validation Portal</title>
+    <link rel="SHORTCUT ICON" href="~/favicon.ico" />
+    <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    @Styles.Render("~/Content/Fonts/FontAwesomeCSS")
+    @Styles.Render("~/Content/BootstrapCSS")
+    @Styles.Render("~/Content/jqueryUICSS")
+    @Styles.Render("~/Content/datePickerCSS")
+    @Styles.Render("~/Content/DataTables/css/DataTablesCSS")
+    @Styles.Render("~/Content/Styles/Select2CSS")
+    @Styles.Render("~/Content/ValidationPortal")
+</head>
+<body>
+    <form name="submitLogout" method="post" action="/Login/Logout">
+        <input type="submit" style="visibility: hidden; width: 5em;"/>
+    </form>
+    <div class="container-fluid layout">
+        <div class="row ">
+            <header class="top-banner col-12" role="banner" aria-label="West Ada - Ed-Fi Data Validation Portal">
+                <img src="~/Content/Images/WestAdaLogo.jpg" class="walogo" alt="West Ada Logo" />
+                <p>
+                    <a href="#skipnavigation">Skip navigation</a>
+                    &nbsp;
+                    <a href="javascript:document.submitLogout.submit()">Log Out</a>
+                </p>
+                <div role="heading" aria-level="1" class="app-title clear-margin">Ed-Fi Data Validation Portal</div>
+            </header>
+        </div>
+        <div class="row noprint">
+            <div class="col-12">
+                <nav id="layout-navbar" role="navigation" aria-label="Main navigation" class="navbar navbar-expand-sm prime-blue">
+                    <div class="collapse navbar-collapse w-100 order-1 order-md-0" id="theNavBar">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item">
+                                @Html.Raw(Html.ActionLink("LinkText", "Index", "Home", new { area = "" }, new { @class = "nav-link validation-nav-link show-page-loading" }).ToHtmlString().Replace("LinkText", "<i class=\"fas fa-home white-heavy-text\"></i> Home"))
+                            </li>
+
+                            @if (permissions.CanViewValidationReports)
+                            {
+                                <li class="nav-item">
+                                    @Html.Raw(Html.ActionLink("LinkText", "Reports", "Validation", new { area = "" }, new { @class = "nav-link validation-nav-link show-page-loading" }).ToHtmlString().Replace("LinkText", "Validation Results"))
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                    @Html.Action("NavDropDowns", "Nav")
+                </nav>
+            </div>
+        </div>
+        <div class="row">
+            <nav class="col-12" id="breadcrumb" role="navigation" aria-label="Breadcrumb navigation">
+                @Html.MvcSiteMap().SiteMapPath()
+            </nav>
+        </div>
+        <div class="row layout mainSection">
+            <div class="col-12" role="main">
+                <a name="skipnavigation" id="skipNavigationAnchor" tabindex="-1"></a>       
+                @RenderBody()
+        </div>
+        </div>
+        @Html.Partial("_LittleFooter")
+    </div>
+
+    <!-- Turn this overlay on and off when loading new data asynchronously or screens. -->
+    <div id="overlay"><span id="overlay-text" role="status" aria-live="polite">Loading ... <i class="fas fa-cog fa-spin"></i></span></div>
+    
+@*     @{ *@
+@*         Html.RenderAction("Environment", "Nav"); *@
+@*     } *@
+    
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @Scripts.Render("~/bundles/jqueryUI")
+    @Scripts.Render("~/bundles/datePickerJS")
+    @Scripts.Render("~/bundles/Select2")
+    @Scripts.Render("~/bundles/DataTables")
+    <script>
+        @*  The contents of this script tag are not in a separate file because portions are generated on the server side with ASP.NET MVC *@
+        // Supports overlay
+        function overlayOn() { $("#overlay").fadeIn(100); }
+        function overlayDelayedOn() { $("#overlay").delay(1000).fadeIn(100); }
+        function overlayOff() { $("#overlay").hide(); }
+
+        // IE11 polyfill for String.includes
+        if (!String.prototype.includes) {
+            String.prototype.includes = function(search, start) {
+                if (typeof start !== 'number') {
+                    start = 0;
+                }
+
+                if (start + search.length > this.length) {
+                    return false;
+                } else {
+                    return this.indexOf(search, start) !== -1;
+                }
+            };
+        }
+
+        // IE11 polyfill for String.startsWith
+        if (!String.prototype.startsWith) {
+            Object.defineProperty(String.prototype, 'startsWith', {
+                value: function(search, pos) {
+                    pos = !pos || pos < 0 ? 0 : +pos;
+                    return this.substring(pos, pos + search.length) === search;
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            // Eliminate any lingering overlay effect. Show it hen leaving page.
+            overlayOff();
+            $(".show-page-loading").bind('click', function () { overlayDelayedOn(); });
+            $(".show-data-loading").bind('click', function () { overlayOn(); });
+
+            function changeEdOrg(e) {
+                var orgId = e.params.data.id;
+                @*Url.RouteUrl("api/user-session", new { httpRoute = string.Empty, controller = "UserSessionController" })*@
+
+                $.ajax({
+                    url: "@Url.Content("~/api/user-session/ed-org/select")",
+                    type: "Post",
+                    data: orgId,
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (data) {
+                        // If looking at detailed errors, go back to main reports listing for the new district.
+                        if (location.pathname.toLowerCase().indexOf("validation/report/") !== -1) {
+                            location.replace("@Url.Action("Reports","Validation")");
+                            return;
+                        }
+                        // If looking at any other reports, get the listing for the new district.
+                        //if (location.pathname.toLowerCase().indexOf("report") !== -1) {
+                        console.log('changing to '+orgId);
+                        location.reload();
+                        return;
+                        //}
+                    },
+                    error: function () {
+                        console.log('An error occurred when attempting to change Ed Org to '+orgId);
+                    }
+                });
+            }
+
+            $('#newActionDropdownYear').select2({
+                containerCssClass: 'newActionDropdownYear',
+                minimumResultsForSearch: Infinity,
+            });
+
+            $.get("@Url.Content("~/api/validation/edorgs/autocomplete")")
+                .done(function(data) {
+                    var dropDown = $('#edOrgNames');
+
+                    data.map(function(x) {
+                        dropDown.append($("<option></option>")
+                            .attr("value", x.Id)
+                            .text(x.OrganizationName));
+                    });
+
+                    $.get("@Url.Content("~/api/user-session/ed-org/get")")
+                        .done(function(data) {
+                            dropDown.val(data.id);
+
+                            dropDown.select2({
+                                // containerCssClass: 'validation-dropdown-menu'
+                            });
+
+                            setupSelectKeyHandling(); 
+
+                            dropDown.on('select2:select', changeEdOrg);
+                        })
+                        .fail(function () {
+                            console.log('An error occurred when attempting to get current EdOrg');
+                        });
+                }).fail(function () {
+                    console.log('An error occurred when attempting to get EdOrgs');
+            });
+
+            // Supports NavDropDowns, School Year selection menu dropdown
+            $("#newActionDropdownYear").change(function (e) {
+                var chosenLink = $(this);
+                var yearId = $(this).val();
+                $.ajax({
+                    url: "@Url.Content("~/api/user-session/school-year/select")",
+                    type: "Post",
+                    data: yearId,
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (data) {
+                        console.log('setting school year to '+chosenLink.text());
+
+                        // If looking at detailed errors, go back to main reports listing for the new ODS School Year.
+                        if (location.pathname.toLowerCase().indexOf("validation/report/") !== -1) {
+                            location.replace("@Url.Action("Reports","Validation")");
+                            return;
+                        }
+
+                        // If looking at any other reports, get the listing for the new ODS School Year.
+                        location.reload();
+                    },
+                    error: function () {
+                        console.log('An error occurred when attempting to change School Year to '+yearId);
+                    }
+                });
+            });
+        });
+
+        function setupSelectKeyHandling() {
+            $(document).on('focus', '.select2.select2-container', function (e) {
+                // console.log("%c Focus Event ", "background:green; color:white", e);
+
+                var initialFocusEvent = e.originalEvent; //don't re-open on close focus event
+                var targetIsInput = e.target && $(e.target).is("input"); // don't open when focused from input 
+                var relTargetIsInput = e.relatedTarget && $(e.relatedTarget).is("input");
+                var anyTargetIsInput = targetIsInput || relTargetIsInput;
+  
+                // only open on original attempt - close focus event should not fire open
+                if (initialFocusEvent && !anyTargetIsInput) {
+                    // console.log("%c Call Select2 Open ", "background:orange; color:white");
+                    $(this).siblings('select').select2('open');
+                } 
+            });
+
+            //$(document).on('click', '.select2.select2-container', function (e) {
+            //    console.log("%c Click Event ", "background:blue; color:white", e);
+            //});
+
+            //$(document).on('keyup', '.select2.select2-container', function (e) {
+            //    if (e.which == 9) {
+            //        console.log("%c Tab Event ", "background:blue; color:white", e);
+            //    } 
+            //});
+        }
+    </script>
+
+    @RenderSection("scripts", required: false)
+</body>
+</html>

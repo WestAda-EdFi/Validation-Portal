@@ -1,0 +1,6 @@
+ruleset SampleChecks
+
+rule 1.1.1
+when {Student}.[FirstName] == 'Ben' then
+require {Student}.[LastSurname] == 'Brady'
+else 'Ben should have last name Brady.'

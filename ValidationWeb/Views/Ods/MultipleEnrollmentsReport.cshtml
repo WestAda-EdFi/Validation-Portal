@@ -1,0 +1,235 @@
+﻿@using ValidationWeb.Filters
+@using ValidationWeb.Utility
+@model OdsMultipleEnrollmentsReportViewModel
+@{
+    var identity = (ValidationPortalIdentity)User.Identity;
+    var appRoleName = identity.AppRole.Name;
+    var permissions = User.Identity.GetViewPermissions(identity.AppRole);
+}
+
+<div id="pagetop" class="row tbmargin10">
+
+    @if (Model.IsStateMode)
+    {
+        <h2 class="vp-body-header justify-content-start align-self-center">Students with Multiple Open Enrollment for All Minnesota Districts</h2>
+    }
+    else
+    {
+        <h2 class="vp-body-header justify-content-start align-self-center">Students with Multiple Open Enrollments for District @Model.EdOrgName (@Model.EdOrgId.ToString())</h2>
+
+        if (Model.SchoolId.HasValue && !string.IsNullOrWhiteSpace(Model.SchoolName))
+        {
+            <div class="vp-body-header justify-content-start align-self-center">
+                For @Model.SchoolName (@Model.SchoolId)
+            </div>
+        }
+    }
+
+    @if (permissions.CanAccessAllDistrictsMode)
+    {
+         if (Model.IsStateMode)
+         {
+             <div class="col-md-2">
+                 <a href="@Url.Action("MultipleEnrollmentsReport", "Ods", new { isStateMode = false })" class="show-data-loading">View Single District</a></div>
+         }
+         else
+         {
+             <div class="col-md-2">
+                 <a href="@Url.Action("MultipleEnrollmentsReport", "Ods", new { isStateMode = true })" class="show-data-loading">View All Districts</a></div>
+         }
+    }
+</div>
+<div id="requestedReportContent" class="row">
+    <table class="table table-bordered nowrap" id="reportsTable" style="table-layout: fixed; width: 98% !important;" role="grid">
+        <caption class="hidden">Click to sort by ID, District/School, Cumulative Enrollments, Enrolled in Multiple Schools, or Enrolled at Other Districts</caption>
+    </table>
+</div>
+<div role="note">
+    <div id="notes" class="row">
+        <div class="vp-body-header">Notes:</div>
+    </div>
+    <div class="row">(1) School values might not sum to District values. This is expected because a particular student may be counted separately at all schools where that student has been enrolled.</div>
+    <div class="row">(2) All columns including Cumulative Enrollments count individual students only once, even if they have multiple enrollments.</div>
+    <div class="row">(3) &quot;Cumulative&quot; means that enrollments are accounted as at least one enrollment any time during the school year - not only &quot;Currently Enrolled&quot;.</div>
+</div>
+<div class="row tbmargin10">
+    <div class="col-md-2">
+        <a href="#pagetop">Back to Top</a>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function() {
+            var drillDownLinkTemplate =
+                '<a href="@Html.Raw(Url.Action(
+                              "MultipleEnrollmentsReport",
+                              "Ods",
+                              new
+                                {
+                                    schoolId = "_EdOrgId_",
+                                    drillDownColumnIndex = "_DrillDownIndex_",
+                                    isStateMode = Model.IsStateMode,
+                                    districtToDisplay = "_EdOrgId_",
+                                    isStudentDrillDown = true,
+                                    orgType = "_OrgType_"
+                                }))" aria-label="_Label_">_LinkText_</a>';
+
+            function createDrillDownLink(edOrgId, drillDownIndex, orgType, label, linkText) {
+                return drillDownLinkTemplate
+                    .replace(/_EdOrgId_/g, edOrgId)
+                    .replace(/_DrillDownIndex_/g, drillDownIndex)
+                    .replace(/_OrgType_/g, orgType)
+                    .replace(/_Label_/g, label)
+                    .replace(/_LinkText_/g, linkText);
+            }
+
+            var stateLinkTemplate =
+                '<a href="@Html.Raw(Url.Action(
+                              "MultipleEnrollmentsReport",
+                              "Ods",
+                              new
+                                { isStateMode = false, districtToDisplay = "_EdOrgId_" }))" class="show-data-loading">_EdOrgId_</a>';
+
+            function createStateLink(edOrgId) {
+                return stateLinkTemplate.replace(/_EdOrgId_/g, edOrgId);
+            }
+
+            $('div.dataTables_scrollBody').css('min-height', '350px');
+
+            var dataTable = $('#reportsTable').DataTable({
+                paging: true,
+                pagingType: 'full_numbers',
+                info: true,
+                scrollCollapse: true,
+                deferRender: true,
+                searching: false,
+                serverSide: true,
+                processing: true,
+                language: {
+                    loadingRecords: 'Loading...',
+                    processing: "Loading...",
+                    aria: {
+                        paginate: {
+                            first: 'First page',
+                            previous: 'Previous page',
+                            next: 'Next page',
+                            last: 'Last page'
+                        }
+                    }
+                },
+                dom: "<'row'<'col-md-3'l><'col-md-3 offset-6 text-right jumpToNotes'>>" +
+                    "<'row'<'col-sm-12'tr>>" +
+                    "<'row'<'col-md-3'i><'col-md-9 pull-right'p>>",
+                fnInitComplete: function() {
+                    $('div.dataTables_scrollBody').css('min-height', 0);
+                },
+                ajax: {
+                    url: "@Html.Raw(Url.Action("GetMultipleEnrollmentCountsData", new
+                     {
+                         isStateMode = Model.IsStateMode,
+                         edOrgId = Model.EdOrgId,
+                         fourDigitSchoolYear = Model.FourDigitSchoolYear
+                     }))",
+                    complete: function () {
+                        var dataTable = $($("#reportsTable").DataTable().table().header());
+                        dataTable.find('th').removeAttr('aria-label');
+                    }
+                },
+                columns: [
+                    {
+                        title: 'ID',
+                        data: 'edOrgId',
+                        width: '100px',
+                        @* taking out these district view links for now *@
+                        @*@if (!Model.IsStateMode)
+                        {
+                            <text>
+                            render: function(data, type, row, meta) {
+                            
+                                if (data != null && type === 'display' && row.orgType === 200) {
+                                    @if (permissions.CanAccessAllDistrictsMode)
+                                    {
+                                        @:return createStateLink(data);
+                                    }
+                                    else
+                                    {
+                                        @:return data;
+                                    }
+                                } else {
+                                    return data;
+                                }
+                            }
+                            </text>
+                        }*@
+                    },
+                    {
+                        title: 'District/School',
+                        data: 'leaSchool',
+                        width: '300px',
+                    },
+                    {
+                        title: 'Cumulative Enrollments',
+                        data: 'distinctEnrollmentCount',
+                        render: function (data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                {
+                                    @:createDrillDownLink(row.edOrgId, 0, row.orgType, 'Cumulative Enrollments Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                }
+                                else
+                                {
+                                    @: data
+                                }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Enrolled in Multiple Schools',
+                        data: 'enrolledInOtherSchoolsCount',
+                        render: function (data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                    @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                {
+                                    @:createDrillDownLink(row.edOrgId, 1, row.orgType, 'Enrolled in Multiple Schools Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                }
+                                else
+                                {
+                                    @: data
+                                }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Enrolled at Other Districts',
+                        data: 'enrolledInOtherDistrictsCount',
+                        render: function (data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                    @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                {
+                                    @:createDrillDownLink(row.edOrgId, 2, row.orgType, 'Enrolled at Other Districts Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                }
+                                else
+                                {
+                                    @: data
+                                }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                ]
+            });
+
+            $(dataTable.table().header()).addClass('table-primary');
+            $('.jumpToNotes').html('<a href="#notes">View Report notes</a>');
+        });
+    </script>
+}

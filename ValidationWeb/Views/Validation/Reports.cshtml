@@ -1,0 +1,319 @@
+﻿@using ValidationWeb.Filters
+@using ValidationWeb.Utility
+@model ValidationReportsViewModel
+@{
+    var identity = (ValidationPortalIdentity)User.Identity;
+    var appRoleName = identity.AppRole.Name;
+    var permissions = User.Identity.GetViewPermissions(identity.AppRole);
+}
+
+<script>
+    var lastModalExitButton = 'none';
+</script>
+
+
+<div class="row">
+    <h2 class="vp-body-header col-8 justify-content-start align-self-center">Validation Results for District @Model.DistrictName</h2>
+    <div class="col-4 justify-content-end">
+        <div class="container-fluid">
+            <div class="row justify-content-end">
+                <!-- New Validation Modal -->
+                <div id="NewValidationModal" class="modal fade" role="dialog" aria-label="Select Collection and School Year" aria-modal="true" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header prime-blue white-heavy-text">
+                                <h4 class="modal-title">Select Collection and School Year</h4>
+                                <button type="button" class="close" aria-label="close" onclick="lastModalExitButton='cancel'" data-dismiss="modal">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-10">
+                                        <label for="collectionIdSelect">Select a collection of rules to validate:</label>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-10">
+                                        <select id="cycleIdSelect" name="cycleIdSelect" class="form-control">
+                                            @foreach (var cycle in Model.SubmissionCycles)
+                                            {
+                                                var schoolYearAndCollectionName = "";
+                                                var coll = Model.RulesCollections.FirstOrDefault(c => c.CollectionId == cycle.CollectionId);
+                                                if (coll != null)
+                                                {
+                                                    schoolYearAndCollectionName = $"{cycle.SchoolYearDisplay} / {coll.ToFriendlyName()}";
+                                                    <option value="@(cycle.Id)"
+                                                            @if (cycle.SchoolYearId == Model.FocusedSchoolYearId) { <text> selected </text> }>
+                                                        @(schoolYearAndCollectionName)
+                                                    </option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button id="confirm-validation" type="button" class="btn prime-blue white-heavy-text" data-dismiss="modal" data-toggle="modal" data-target="#ConfirmNewValidationModal">Next &gt;&gt;</button>
+                                <button type="button" class="btn prime-blue white-heavy-text" data-dismiss="modal" onclick="lastModalExitButton='cancel'">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confirm Validation Modal -->
+            <div id="ConfirmNewValidationModal" class="modal fade" role="dialog" aria-label="Confirm: Run Validation" aria-modal="true" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header prime-blue white-heavy-text">
+                            <h4 class="modal-title">Confirm: Run Validation</h4>
+                            <button type="button" class="close" aria-label="close" data-dismiss="modal" onclick="lastModalExitButton='cancel'">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            Please confirm you would like to run a validation for District @(Model.DistrictName), School Year <span class="schoolYearDisplayName"></span>, Collection <span class="collectionDisplayName"></span>?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn prime-blue white-heavy-text" data-dismiss="modal" onclick="lastModalExitButton='launch'">Launch Validation</button>
+                            <button type="button" class="btn prime-blue white-heavy-text" data-dismiss="modal" onclick="lastModalExitButton='cancel'">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (permissions.CanRunValidationReports)
+            {
+                <button id="newValidationButton" type="button" class="btn prime-blue white-heavy-text margin10 justify-self-end" data-toggle="modal" data-target="#NewValidationModal">Validate</button>
+            }
+            <button id="export" data-export="export" class="btn prime-blue white-heavy-text margin10 justify-self-end">Export</button>
+
+        </div>
+    </div>
+</div>
+
+<div class="row tbmargin10">
+    <div id="requestedReportContent" class="col-md-12">
+        <table class="table table-bordered" id="reportsTable" role="grid">
+            <caption class="hidden">Select a heading to sort by Request Date/Time, Collection, Initiated By, Status, Completion Date/Time, Error Count, or Warning Count.</caption>
+        </table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        // Once the user has clicked the Validate button and chosen a *year* and *collection*,
+        // This callback records those choices on the second popup (a confirmation dialog/modal).
+        $('#NewValidationModal').on('hidden.bs.modal',
+            function(e) {
+                var cycleId = $('#cycleIdSelect').val();
+                var cycleIdSelection = $('#cycleIdSelect').find("option:selected").text();
+                var schoolYearDisplayName, collectionId;
+                var selection = cycleIdSelection.split(" / ");
+                schoolYearDisplayName = selection[0];
+                collectionId = selection[1];
+
+                $('.schoolYearDisplayName').text(schoolYearDisplayName);
+                $('.collectionDisplayName').text(collectionId.replace(/_/g, ' '));
+                $('#confirm-validation').attr("data-id", cycleId);
+
+                $('.schoolYearCollectionSelection').text(cycleIdSelection.replace(/_/g, ' '));
+            });
+
+        // Once the user has already clicked the Validate button and chosen a *year* and *collection*, there is a second, Yes/No confirmation.
+        // This registers a callback to run the validation engine if the user chose YES when dismissing the confirmation dialog.
+        $('#ConfirmNewValidationModal').on('hidden.bs.modal',
+            function(e) {
+                if (lastModalExitButton == 'launch') {
+                    overlayOn();
+
+                    var cycleId = $('#confirm-validation').attr("data-id");
+                    $.ajax({
+                        url: '@(Url.Action("RunEngine", "Validation"))',
+                        type: "POST",
+                        beforeSend: function(request) {
+                            request.setRequestHeader('Authorization', '@(Model.TheUser.UserId)');
+                        },
+                        async: true,
+                        data: { submissionCycleId: cycleId },
+                        success: function(result) {
+                            $('#reportsTable').DataTable().ajax.reload();
+                        },
+                        error: function(err) {
+                            // Perhaps in the future we might want to display to the user an error if the validation failed,
+                            // thus we might need the "err" variable. TODO
+                            overlayOff();
+                        }
+                    });
+                }
+            });
+
+        $(document).ready(function() {
+            $("#export").click(function(e) {
+                e.preventDefault();
+                window.location.href = "@Html.Raw(Url.Action("DownloadReportSummariesCsv", "Validation", new
+                                                                                                         {
+                                                                                                             edOrgId = Model.FocusedEdOrgId
+                                                                                                         }))";
+            });
+
+            var reportLinkTemplate =
+                '<a href="@Html.Raw(Url.Action("Report", "Validation", new
+                                                                       {
+                                                                           id = "_id_"
+                                                                       }))" class="show-data-loading"  aria-label="_Label_">_collection_</a>';
+
+            function createReportLink(id, collection, label) {
+                return reportLinkTemplate
+                    .replace(/_id_/g, id)
+                    .replace(/_Label_/g, label)
+                    .replace(/_collection_/g, collection);
+            }
+
+            var dataTable = $('#reportsTable').DataTable({
+                paging: true,
+                pagingType: 'full_numbers',
+                info: true,
+                scrollCollapse: true,
+                deferRender: true,
+                searching: false,
+                serverSide: true,
+                processing: true,
+                language: {
+                    loadingRecords: 'Loading...',
+                    processing: "Loading...",
+                    aria: {
+                        paginate: {
+                            first: 'First page',
+                            previous: 'Previous page',
+                            next: 'Next page',
+                            last: 'Last page'
+                        }
+                    }
+                },
+                //drawCallback: function(settings) {
+                //    var that = $(this);
+                //    that.find('th').addClass('edge--table-fix');
+
+                //    setTimeout(function () {
+                //        console.log(that);
+                //        that.find('th').removeClass('edge--table-fix');
+                //    }, 100);
+
+                //},
+                dom: "<'row'<'col-md-3'l><'col-md-3 offset-6 text-right jumpToNotes'>>" +
+                    "<'row'<'col-sm-12'tr>>" +
+                    "<'row'<'col-md-3'i><'col-md-9 pull-right'p>>",
+                ajax: {
+                    url: "@Html.Raw(Url.Action("ReportSummaries", new
+                                                                  {
+                                                                      edOrgId = Model.FocusedEdOrgId
+                                                                  }))",
+                    complete: tableDataRefreshed
+                },
+                order: [[0, 'desc']],
+                columns: [
+                    {
+                        title: 'Request Date/Time',
+                        data: 'requestedWhen',
+                        render: function(data, type, row, meta) {
+                            if (type === 'display') {
+                                return data == null ? "Unknown" : new Date(data).toLocaleString("en-US");
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Collection',
+                        data: 'collection',
+                        render: function(data, type, row, meta) {
+                            var collectionNameWithYear =
+                                row.schoolYear.startYear +
+                                    '-' +
+                                    row.schoolYear.endYear +
+                                    ' / ' +
+                                    data.replace(/_/g, ' ');
+
+                            if (row.status.indexOf("In Progress") >= 0) {
+                                return collectionNameWithYear;
+                            } else {
+                                return createReportLink(
+                                    row.validationReportSummaryId, 
+                                    collectionNameWithYear,
+                                    'View Report initiated by ' 
+                                        + row.initiatedBy + ' on ' 
+                                        + new Date(row.requestedWhen).toLocaleString("en-US") 
+                                        + ' for collection ' + collectionNameWithYear);
+                            }
+                        }
+                    },
+                    {
+                        title: 'Initiated By',
+                        data: 'initiatedBy',
+                    },
+                    {
+                        title: 'Status',
+                        data: 'status',
+                        // chop this off or just show the overview
+                    },
+                    {
+                        title: 'Completion Date/Time',
+                        data: 'completedWhen',
+                        render: function(data, type, row, meta) {
+                            if (type === 'display') {
+                                return data == null ? "-" : new Date(data).toLocaleString("en-US");
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Error Count',
+                        data: 'errorCount',
+                        render: function(data, type, row, meta) {
+                            if (type === 'display') {
+                                return data == null ? "-" : data;
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Warning Count',
+                        data: 'warningCount',
+                        render: function(data, type, row, meta) {
+                            if (type === 'display') {
+                                return data == null ? "-" : data;
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                ]
+            });
+
+            $(dataTable.table().header()).addClass('table-primary');
+
+            function tableDataRefreshed() {
+                var dataTable = $('#reportsTable').DataTable();
+                overlayOff();
+                var foundInProgress = false;
+
+                dataTable.rows().every(function(rowIdx, tableLoop, rowLoop) {
+                    var data = this.data();
+                    if (data.status.indexOf('In Progress') >= 0) {
+                        foundInProgress = true;
+                        return false; // break out of this every() loop
+                    }
+                });
+
+                if (foundInProgress) {
+                    console.log('found "In Progress", checking back in 5s');
+                    setTimeout(dataTable.ajax.reload, 5000);
+                }
+
+                $(dataTable.table().header()).find('th').removeAttr('aria-label');
+
+                return true;
+            }
+        });
+    </script>
+}

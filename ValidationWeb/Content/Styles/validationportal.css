@@ -1,0 +1,1023 @@
+﻿body {
+    padding-top: 15px;
+    padding-bottom: 15px;
+    font-family: Calibri, Arial, sans-serif;
+}
+
+.mainSection a {
+    color: #0563c1;
+    text-decoration: underline;
+}
+
+    .mainSection a:hover {
+        color: #196486;
+        text-decoration: underline;
+    }
+
+    .mainSection a:focus {
+        color: #003865;
+        border-radius: 5px;
+        background-color: #A4BCC2
+    }
+
+nav#breadcrumb a {
+    color: #0563c1;
+    text-decoration: underline;
+}
+
+    nav#breadcrumb a:hover {
+        color: #196486;
+        text-decoration: underline;
+    }
+
+    nav#breadcrumb a:focus {
+        color: #003865;
+        border-radius: 5px;
+        background-color: #A4BCC2
+    }
+
+
+/* Set padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+    margin: 0;
+}
+
+.vp-body-header {
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-bottom: 8px;
+}
+
+div#notes {
+    margin-top: 10px;
+}
+
+.container-fluid, .layout-footer {
+    max-width: 1280px;
+}
+
+#overlay {
+    /* From W3CSchools */
+    position: fixed; /* Sit on top of the page content */
+    display: none; /* Hidden by default */
+    width: 100%; /* Full width (cover the whole page) */
+    height: 100%; /* Full height (cover the whole page) */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    box-shadow: black 2px 2px inset;
+    background-color: rgba(0,0,0,0.3); /* Black background with opacity */
+    z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
+    cursor: pointer; /* Add a pointer on hover */
+}
+
+#overlay-text {
+    /* From W3CSchools */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    font-size: 50px;
+    color: white;
+    -ms-transform: translate(-50%,-50%);
+    transform: translate(-50%,-50%);
+    width: 100%;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    text-align: center;
+    background-color: rgb(0, 56, 101);
+    background-color: rgba(0, 56, 101, 0.9);
+    text-shadow: 0 0 1px #000, 0 0 1px #000, 0 0 1px #000; /* text outline */
+}
+
+/* Background Colors */
+.prime-blue {
+    background-color: rgb(0, 56, 101);
+}
+
+.prime-blue-text {
+    color: rgb(0, 56, 101);
+}
+
+.accent-blue {
+    background-color: rgb(164, 188, 194);
+}
+
+.accent-soft-blue {
+    background-color: rgb(184, 218, 255);
+}
+
+.accent-light-gray {
+    background-color: #D9D9D6;
+}
+
+.danger-red {
+    background-color: rgb(166, 25, 46);
+    color: rgb(255, 255, 255);
+    font-weight: bold;
+}
+
+.white-heavy-text {
+    color: rgb(255, 255, 255);
+    font-weight: bold;
+}
+
+a.white-heavy-text {
+    color: rgb(255, 255, 255);
+    font-weight: bold;
+    text-decoration: none;
+}
+
+    a.white-heavy-text:hover {
+        color: #003865;
+        background-color: #a4bcc2;
+        text-decoration: none;
+    }
+
+    button.white-heavy-text:focus,
+    a.white-heavy-text:focus {
+        color: #003865;
+        border-radius: 5px;
+        background-color: #A4BCC2;
+        text-decoration: none;
+    }
+
+    button.white-heavy-text:hover,
+    a.white-heavy-text:hover {
+        color: #003865;
+        font-weight: bold;
+        background-color: #a4bcc2;
+        text-decoration: none;
+    }
+
+.dropdown-item:hover, .dropdown-item:focus {
+    color: #003865;
+    font-weight: bold;
+    background-color: #a4bcc2;
+    text-decoration: none;
+}
+
+.close {
+    background-color: transparent;
+    color: rgb(255, 255, 255);
+    font-weight: bold;
+    text-decoration: none;
+    opacity: 1.0;
+}
+
+    .close:hover,
+    .close:focus {
+        color: #003865;
+        background-color: #a4bcc2;
+        font-weight: bold;
+        text-decoration: none;
+        opacity: 1.0 !important;
+    }
+
+
+.scrollable-row {
+    overflow-y: auto;
+}
+
+.noDisc {
+    list-style: none;
+    padding-left: 0;
+}
+
+.clear-margin {
+    margin: 0;
+}
+
+.margin10 {
+    margin: 10px;
+}
+
+.tbmargin10 {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.lrmargin0 {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.lrmargin10 {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.page-width {
+    width: 100%;
+}
+
+.rounded-padded {
+    border-radius: 15px;
+    padding: 20px;
+}
+
+.district-dropdown {
+    margin-right: 20px;
+    color: rgb(255, 255, 255);
+    font-weight: bold;
+}
+
+/***************************************************************************************/
+/* Forms */
+/* Set width on the form input elements since they're 100% wide by default */
+input, select, textarea {
+    max-width: 280px;
+}
+
+/* override/undo this for announcement dialog ... */
+
+div#announcement-modal-content input,
+div#announcement-modal-content textarea {
+    max-width: 100%;
+}
+
+div#NewValidationModal input,
+div#NewValidationModal select {
+    max-width: 100%;
+}
+
+
+/***************************************************************************************/
+/***************************************************************************************/
+/* Nav */
+.nav-link-label {
+    color: rgb(255, 255, 255);
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.back-link, .vp-page-link {
+    background-color: rgb(0, 56, 101);
+    border-radius: 4px;
+    padding: 4px;
+    color: white;
+    margin-right: 4px;
+}
+
+    .back-link:hover, .vp-page-link:hover {
+        background-color: rgb(164, 188, 194);
+        border-color: rgb(217, 160, 28);
+    }
+
+nav select.form-control {
+    height: unset;
+    padding: 0px 10px;
+    margin: 0 10px;
+    width: unset;
+}
+
+nav span.select2 {
+    height: unset;
+    padding: 0px 10px;
+    margin: 0 10px;
+    width: unset;
+}
+
+select.form-control:focus {
+    /*border-width: 5px;*/
+    box-shadow: 0 0 5px #A4BCC2 !important;
+    color: #003865;
+    border-radius: 5px;
+    background-color: #A4BCC2;
+    border-color: #A4BCC2;
+}
+
+    select.form-control:focus > option {
+        box-shadow: 0 0 5px #A4BCC2 !important;
+        color: #003865;
+        border-radius: 5px;
+        background-color: white;
+        border-color: #A4BCC2;
+    }
+
+/***************************************************************************************/
+/***************************************************************************************/
+/* Bootstrap Overrides */
+/*
+    (width & margin) Ensure container rows (especially colored bars) touch the left and right sides of screen.
+                     Override the evil -15px Margin
+    (padding) Keep text from butting again edge of screen.
+*/
+.row.layout {
+    width: 100%;
+    margin: 0;
+    padding: 10px;
+}
+
+.mainSection {
+    min-height: 450px;
+}
+
+/*
+    (width & margin) Ensure container rows (especially colored bars) touch the left and right sides of screen.
+    (padding) Keep colored Navigation bar flush against edge of screen.
+*/
+.container-fluid.layout {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.nopadding {
+    padding: 0 !important;
+}
+
+div.dataTables_scroll {
+    border-bottom: 1px solid #dee2e6;
+}
+
+div.dataTables_scrollBody {
+    min-height: 350px
+}
+
+/*div.DTS
+tbody > tr.odd {
+    background-color: #fff !important;
+}*/
+
+table.dataTable tr.selected {
+    background-color: #B0BED9 !important;
+}
+
+div.DTS div.dataTables_scrollBody table {
+    background-color: white
+}
+
+table.dataTable tbody th, table.dataTable tbody td {
+    padding: 4px 10px; /* e.g. change 8x to 4px here */
+}
+
+/* TODO: get this to work reliably - pocky*/
+/*table.dataTable > tbody > tr > td {
+    max-width: 80px;
+    white-space: nowrap;
+    / *display: block;* /
+    text-overflow: ellipsis;
+    word-break: break-all;
+    overflow: hidden;
+}*/
+
+.page-link {
+    border: none;
+}
+
+    .page-link:hover {
+        text-decoration: underline;
+    }
+
+/***************************************************************************************/
+/***************************************************************************************/
+/* Header area */
+.top-banner {
+    background-color: rgb(255, 255, 255);
+    color: rgb(0, 0, 0);
+    border-bottom-color: rgb(217, 160, 28);
+    border-bottom-width: 10px;
+    border-bottom-style: solid;
+    text-align: right;
+    margin-top: 0;
+    margin-left: 15px;
+    margin-right: 15px;
+    max-width: 1280px;
+}
+
+    .top-banner a {
+        color: #0563c1;
+        text-decoration: underline;
+    }
+
+        .top-banner a:hover {
+            color: #196486;
+            text-decoration: underline;
+        }
+
+        .top-banner a:focus {
+            color: #003865;
+            border-radius: 5px;
+            background-color: #A4BCC2
+        }
+
+
+#layout-navbar {
+    padding: 13px;
+}
+
+/* Hovering over tab with a dropdown will show the content inside */
+.dropdown-toggle:hover .dropdown-menu {
+    display: block;
+}
+
+/*Fix for the dropdown menus not dropping underneath the parent correctly*/
+.dropdown-menu {
+    left: initial;
+}
+
+.walogo {
+    float: left;
+    padding: 40px;
+    height: 160px;
+}
+
+.app-title {
+    font-size: 24pt;
+    font-weight: bold;
+    color: rgb(0, 56, 101);
+}
+
+.navbar-nav a {
+    color: rgb(255, 255, 255);
+    background-color: rgb(0, 56, 101);
+    padding: 0;
+}
+
+    .navbar-nav a:focus {
+        color: #003865;
+        border-radius: 5px;
+        background-color: #A4BCC2;
+    }
+
+footer a:focus {
+    color: #003865 !important;
+    border-radius: 5px;
+    background-color: #A4BCC2;
+}
+
+.validation-dropdown-menu {
+    /*padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;*/
+    padding: 0px;
+    border-color: rgb(217, 160, 28);
+    background-color: white;
+    /*left: initial;*/
+}
+
+    .validation-dropdown-menu > a:hover, .validation-dropdown-toggle:hover, .validation-nav-link:hover {
+        /*padding-top: 0;
+        padding-bottom: 0;
+        margin-top: 0;
+        margin-bottom: 0;*/
+        border-color: rgb(217, 160, 28);
+        background-color: rgb(164, 188, 194);
+        color: rgb(0, 0, 0);
+    }
+
+li.dropdown.nav-item.pull-right, li.dropdown-toggle.nav-item.pull-right {
+    float: right !important;
+}
+
+.select2-container--bootstrap4 .select2-results__option--highlighted,
+.select2-container--bootstrap4 .select2-results__option--highlighted.select2-results__option[aria-selected=true] {
+    background-color: #004085;
+    color: #f8f9fa;
+}
+
+/* Removes standard black arrow that has been replaced with a themed one */
+/*li.dropdown-toggle.nav-item::after {
+    display: none;
+}*/
+
+/***************************************************************************************/
+
+
+/***************************************************************************************/
+/* Footer area Quick Links */
+footer.layout-footer {
+    color: rgb(255, 255, 255);
+    background-color: rgb(0, 56, 101);
+    padding: 0;
+}
+
+    footer.layout-footer li a {
+        color: rgb(164, 188, 194);
+        text-decoration: underline solid rgb(164, 188, 194);
+    }
+
+footer.hfooter {
+    font-size: 133%;
+    font-weight: bold;
+}
+/***************************************************************************************/
+
+/***************************************************************************************/
+/* Errors Detail Page*/
+div.collectionFilter {
+    color: rgb(255, 255, 255);
+    background-color: rgb(0, 56, 101);
+}
+
+    div.collectionFilter:hover {
+        margin-top: 0;
+        margin-bottom: 0;
+        border-color: rgb(217, 160, 28);
+        background-color: rgb(164, 188, 194);
+        color: rgb(0, 0, 0);
+    }
+
+    div.collectionFilter > a:hover {
+        text-decoration: none;
+        color: rgb(0, 56, 101);
+    }
+
+.grid-controls {
+    align-items: center;
+}
+
+    .grid-controls button, .grid-controls input, .grid-controls span {
+        margin: 4px;
+    }
+
+.paging-offset-buttons {
+    margin: 0px;
+    border: 2px solid black;
+    display: inline-block;
+}
+
+.page-button {
+    width: 20px;
+    margin: 0px;
+    padding: 2px;
+    text-align: center;
+    border: 1px solid black;
+    display: inline;
+}
+
+#pageSizeInput, #pageNumberInput {
+    max-width: 50px;
+    display: inline;
+}
+
+/* Allows the absolute positioning of child elements like the autocomplete results. */
+th {
+    position: relative;
+}
+
+    th > i {
+        float: right;
+    }
+
+.autocomplete-suggestions {
+    position: absolute;
+    color: black;
+    background-color: white;
+    z-index: 1000;
+    border: 1px solid rgb(217, 160, 28);
+    overflow-y: visible;
+    white-space: nowrap;
+}
+
+.auto-suggestion {
+    border: 1px solid rgb(217, 160, 28);
+    padding-left: 4px;
+    padding-right: 4px;
+    white-space: nowrap;
+}
+
+    .auto-suggestion:hover {
+        background-color: rgb(217, 160, 28);
+        font-weight: bold;
+    }
+
+.ui-autocomplete {
+    max-height: 400px;
+    max-width: 250px;
+    overflow-y: scroll;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+}
+
+.ui-autocomplete-input:focus {
+    color: #003865;
+    border-radius: 5px;
+    background-color: #A4BCC2;
+    border-color: #A4BCC2;
+}
+
+.ui-menu-item {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* IE 6 doesn't support max-height
+   * we use height instead, but this forces the menu to always be this tall
+   */
+* html .ui-autocomplete {
+    height: 100px;
+}
+
+/***************************************************************************************/
+
+/***************************************************************************************/
+/* Reports Page*/
+.report-button-link {
+    margin-left: 4px;
+}
+/***************************************************************************************/
+
+/***************************************************************************************/
+/* Admin/Index */
+
+.id-hide-column {
+    display: none;
+}
+
+.list-group {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+.list-group-item-action {
+    width: 100%;
+    color: #495057;
+    text-align: inherit;
+}
+
+    .list-group-item-action:hover, .list-group-item-action:focus {
+        color: #196486;
+        text-decoration: underline;
+        background-color: #D9D9D6;
+    }
+
+    .list-group-item-action:focus {
+        color: #003865;
+        border-radius: 5px;
+        background-color: #A4BCC2;
+    }
+
+    .list-group-item-action:active {
+        color: #212529;
+        background-color: #D9D9D6;
+    }
+
+.list-group-item {
+    position: relative;
+    display: block;
+    padding: 0.75rem 1.25rem;
+    margin-bottom: -1px;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    font-size: 75%;
+    color: #000;
+    background: #D9D9D6;
+}
+
+    .list-group-item:first-child {
+        border-top-left-radius: 0.25rem;
+        border-top-right-radius: 0.25rem;
+    }
+
+    .list-group-item:last-child {
+        margin-bottom: 0;
+        border-bottom-right-radius: 0.25rem;
+        border-bottom-left-radius: 0.25rem;
+    }
+
+    .list-group-item:hover, .list-group-item:focus {
+        z-index: 1;
+        text-decoration: underline;
+    }
+
+    .list-group-item.disabled, .list-group-item:disabled {
+        color: #6c757d;
+        background-color: #fff;
+    }
+
+    .list-group-item.active {
+        z-index: 2;
+        color: #003865;
+        background-color: #A4BCC2;
+        border-color: unset;
+    }
+
+
+.list-group-flush .list-group-item {
+    border-top: #78BE21 1px dotted;
+    border-bottom: #78BE21 1px dotted;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+}
+
+.list-group-flush:first-child .list-group-item:first-child {
+    border-top: 0;
+}
+
+.list-group-flush:last-child .list-group-item:last-child {
+    border-bottom: 0;
+}
+
+.list-group-item.active:before {
+    content: ">";
+    width: 20px;
+    margin-left: -15px;
+    display: inline-block;
+    text-decoration: underline;
+}
+
+/* to prevent IE11 from underlining the arrow (known bug) */
+.list-group-item.active:before {
+    text-decoration: none;
+}
+
+.list-group-item:before {
+    content: "";
+    width: 20px;
+    margin-left: -15px;
+    display: inline-block;
+}
+
+.list-group-item-primary {
+    color: #004085;
+    background-color: #b8daff;
+}
+
+    .list-group-item-primary.list-group-item-action:hover,
+    .list-group-item-primary.list-group-item-action:focus {
+        color: #004085;
+        background-color: #9fcdff;
+    }
+
+    .list-group-item-primary.list-group-item-action.active {
+        color: #fff;
+        background-color: #004085;
+        border-color: #004085;
+    }
+
+#submission-form-rows .form-row {
+    padding-top: 5px;
+}
+
+#add-submission-cycle-button {
+    float: right;
+}
+
+.card {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    /* Adds a hyphen where the word breaks, if supported (No Blink) */
+    -ms-hyphens: auto;
+    -moz-hyphens: auto;
+    -webkit-hyphens: auto;
+}
+
+.table-primary,
+.table-primary > th,
+.table-primary > td {
+    color: rgb(255, 255, 255);
+    background-color: #003865;
+}
+
+a {
+    color: #0563c1;
+}
+
+    a:hover {
+        color: #196486;
+    }
+
+.page-item.active .page-link {
+    background-color: #0563c1;
+}
+
+.page-item.disabled :focus {
+    background-color: #A4BCC2;
+}
+
+
+.page-link {
+    color: #0563c1;
+}
+
+    .page-link:hover {
+        color: #196486;
+    }
+
+/***************************************************************************************/
+
+button.btn {
+    white-space: nowrap;
+}
+
+.select2-container--default .select2-selection--single {
+    padding: 6px;
+    height: 37px;
+    position: relative;
+    line-height: unset;
+}
+
+.nav-item :focus {
+    color: #003865;
+    border-radius: 5px;
+    background-color: #A4BCC2;
+}
+
+.newActionDropdownYear {
+    min-width: 115px;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: unset;
+}
+
+select :focus {
+    color: #003865;
+    border-radius: 5px;
+    background-color: #A4BCC2
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    width: 40px;
+    color: #fff;
+    padding: 4px 12px;
+    height: 27px;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    width: 20px;
+}
+
+.select2-container--default .select2-selection--single {
+    padding: unset;
+    height: unset;
+}
+
+.select2-selection__arrow {
+    padding: 0 12px !important;
+}
+
+.navbar-text {
+    padding: unset;
+}
+
+::-ms-clear {
+    display: none;
+}
+
+h3, .h3 {
+    font-size: 1.2em;
+}
+
+table {
+    border-top: 1px solid #000;
+    width: 100%;
+}
+
+/*tr, th, td {
+    border-bottom: 1px solid #000;
+}
+
+th {
+    padding: 30px;
+    position: relative;
+    text-align: left;
+    width: 30%;
+}
+
+th:after {
+    background: #000;
+    bottom: 10px;
+    margin-bottom: 5px;
+    content: '';
+    display: block;
+    position: absolute;
+    right: 0;
+    width: 1px;
+ }
+
+
+th + td::before {
+    background: #000;
+    bottom: 30px;
+    content: '';
+    display: block;
+    position: absolute;
+    left: -3px;
+    top: 30px;
+    width: 1px;
+}
+
+td {
+    padding: 30px;
+    position: relative;
+}*/
+
+/*.edge--table-fix::after,
+.edge--table-fix::before,
+.edge--table-fix:focus::after,
+.edge--table-fix:focus::before {
+    bottom: 12px !important;
+}*/
+
+/* dataTables CSS modification & positioning */
+
+/*table.dataTable thead .sorting:before,
+table.dataTable thead .sorting:after,
+table.dataTable thead .sorting_asc:before,
+table.dataTable thead .sorting_asc:after,
+table.dataTable thead .sorting_desc:before,
+table.dataTable thead .sorting_desc:after,
+table.dataTable thead .sorting_asc_disabled:before,
+table.dataTable thead .sorting_asc_disabled:after,
+table.dataTable thead .sorting_desc_disabled:before,
+table.dataTable thead .sorting_desc_disabled:after {
+    height: 0%;
+    margin-bottom: 1.5rem;
+    bottom: 0px !important;
+}*/
+
+table.dataTable thead .sorting::before,
+table.dataTable thead .sorting::after {
+    color: rgb(184, 218, 255);
+    opacity: 1.0 !important;
+}
+
+table.dataTable thead th.sorting_asc::after,
+table.dataTable thead th.sorting_desc::before {
+    color: rgb(184, 218, 255);
+}
+
+table.dataTable thead .sorting::before,
+table.dataTable thead .sorting_asc::before,
+table.dataTable thead .sorting_desc::before {
+    right: 0.9em;
+    content: "\2191";
+    opacity: 1.0 !important;
+}
+
+table.dataTable thead .sorting::after,
+table.dataTable thead .sorting_asc::after,
+table.dataTable thead .sorting_desc::after {
+    right: 0.05em;
+    content: "\2193";
+    opacity: 1.0 !important;
+}
+
+table.dataTable thead th.sorting:focus {
+    color: #003865;
+}
+
+    table.dataTable thead th.sorting:focus::before {
+        color: #003865;
+    }
+
+    table.dataTable thead th.sorting:focus::after {
+        color: #003865;
+    }
+
+table.dataTable thead.table-primary th.sorting_asc:focus {
+    color: #003865;
+}
+
+    table.dataTable thead.table-primary th.sorting_asc:focus::after {
+        color: white;
+    }
+
+table.dataTable thead.table-primary th.sorting_desc:focus {
+    color: #003865;
+}
+
+    table.dataTable thead.table-primary th.sorting_desc:focus::before {
+        color: white;
+    }
+
+.table-primary th {
+    border-color: #003865;
+}
+
+    .table-primary th:focus {
+        /*color: #003865;*/
+        background-color: #A4BCC2;
+    }
+
+table.dataTable thead th div.DataTables_sort_wrapper {
+    position: relative;
+    padding-right: 20px;
+}
+
+    table.dataTable thead th div.DataTables_sort_wrapper span {
+        position: absolute;
+        top: 50%;
+        margin-top: -8px;
+        right: 0;
+    }
+
+.hidden {
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}

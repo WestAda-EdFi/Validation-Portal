@@ -1,0 +1,503 @@
+﻿@using ValidationWeb.Filters
+@using ValidationWeb.Utility
+@model OdsStudentProgramsReportViewModel
+@{
+    var identity = (ValidationPortalIdentity)User.Identity;
+    var appRoleName = identity.AppRole.Name;
+    var permissions = User.Identity.GetViewPermissions(identity.AppRole);
+}
+
+@if (permissions.CanAccessAllDistrictsMode)
+{
+    <div id="pagetop" class="row tbmargin10">
+
+        @if (Model.IsStateMode)
+        {
+            <div class="col-md-3"><a href="@Url.Action("StudentProgramsReport", "Ods", new { isStateMode = false })" class="show-data-loading">View Single District</a></div>
+        }
+        else
+        {
+            <div class="col-md-3"><a href="@Url.Action("StudentProgramsReport", "Ods", new { isStateMode = true })" class="show-data-loading">View All Districts</a></div>
+
+            if (Model.SchoolId.HasValue && !string.IsNullOrWhiteSpace(Model.SchoolName))
+            {
+                <div class="vp-body-header justify-content-start align-self-center">
+                    For @Model.SchoolName (@Model.SchoolId)
+                </div>
+            }
+
+        }
+    </div>
+}
+
+<div class="row tbmargin10">
+    @if (Model.IsStateMode)
+    {
+        <h2 class="vp-body-header justify-content-start align-self-center">Students Characteristics and Programs for All Minnesota Districts</h2>
+    }
+    else
+    {
+        <h2 class="vp-body-header justify-content-start align-self-center">Students Characteristics and Programs for District @Model.EdOrgName (@Model.EdOrgId.ToString())</h2>
+    }
+</div>
+<div class="row tbmargin10">
+    <div class="col-md-6 justify-content-start align-self-center"><h3>Characteristics:</h3></div>
+    <div class="col-md-4"><a href="#requestedReportContent2">Jump to Program Participation</a></div>
+</div>
+
+<div id="requestedReportContent1">
+    <table class="table table-bordered" id="reportsTable1" role="grid">
+        <caption class="hidden">click headings to sort by ID, District/School, Cumulative Enrollments, Demographic Records, Active Duty Parents (ADP), American Indian - Alaska Native (Minnesota), Migrant, Homeless, Immigrant Recently Arrived, English Learner, or SLIFE</caption>
+    </table>
+</div>
+
+<div class="row tbmargin10">
+    <div class="col-md-6 justify-content-start align-self-center"><h3>Program Participation:</h3></div>
+    <div class="col-md-4"><a href="#requestedReportContent1">Jump to Characteristics</a></div>
+</div>
+
+<div id="requestedReportContent2" class="tbmargin10">
+    <table class="table table-bordered" id="reportsTable2" role="grid">
+        <caption class="hidden">click headings to sort by ID, District/School, English Learner, Identified English Learner Served, Independent Study, Section 504, Title I Part A, or Free and Reduced Meals</caption>
+    </table>
+</div>
+
+<div role="note">
+    <div id="notes" class="row tbmargin10">
+        <div class="vp-body-header">Notes:</div>
+    </div>
+    <div class="row">(1) A student is counted as enrolled if the student was enrolled at least once during the school year.</div>
+    <div class="row">(2) Students are counted only once per table cell for the particular school/district/state.</div>
+</div>
+<div class="row tbmargin10">
+    <div class="col-md-2">
+        <a href="#pagetop">Back to Top</a>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function() {
+            var drillDownLinkTemplate =
+                '<a href="@Html.Raw(Url.Action(
+                              "StudentProgramsReport",
+                              "Ods",
+                              new
+                                {
+                                    schoolId = "_EdOrgId_",
+                                    drillDownColumnIndex = "_DrillDownIndex_",
+                                    isStateMode = Model.IsStateMode,
+                                    districtToDisplay = "_EdOrgId_",
+                                    isStudentDrillDown = true,
+                                    orgType = "_OrgType_"
+                                }))" aria-label="_Label_">_LinkText_</a>';
+
+            function createDrillDownLink(edOrgId, drillDownIndex, orgType, label, linkText) {
+                return drillDownLinkTemplate
+                    .replace(/_EdOrgId_/g, edOrgId)
+                    .replace(/_DrillDownIndex_/g, drillDownIndex)
+                    .replace(/_OrgType_/g, orgType)
+                    .replace(/_Label_/g, label)
+                    .replace(/_LinkText_/g, linkText);
+            }
+
+            var stateLinkTemplate =
+                '<a href="@Html.Raw(Url.Action(
+                              "StudentProgramsReport",
+                              "Ods",
+                              new
+                                { isStateMode = false, districtToDisplay = "_EdOrgId_" }))" class="show-data-loading">_EdOrgId_</a>';
+
+            function createStateLink(edOrgId) {
+                return stateLinkTemplate.replace(/_EdOrgId_/g, edOrgId);
+            }
+
+            $('div.dataTables_scrollBody').css('min-height', '350px');
+
+            var dataTable = $('#reportsTable1').DataTable({
+                paging: true,
+                pagingType: 'full_numbers',
+                info: true,
+                scrollCollapse: true,
+                deferRender: true,
+                searching: false,
+                serverSide: true,
+                processing: true,
+                language: {
+                    loadingRecords: 'Loading...',
+                    processing: "Loading...",
+                    aria: {
+                        paginate: {
+                            first: 'First page',
+                            previous: 'Previous page',
+                            next: 'Next page',
+                            last: 'Last page'
+                        }
+                    }
+                },
+                dom: "<'row'<'col-md-3'l><'col-md-3 offset-6 text-right jumpToNotes'>>" +
+                    "<'row'<'col-sm-12'tr>>" +
+                    "<'row'<'col-md-3'i><'col-md-9 pull-right'p>>",
+                ajax: {
+                    url: "@Html.Raw(Url.Action("GetStudentProgramsReportData", new
+                     {
+                         isStateMode = Model.IsStateMode,
+                         edOrgId = Model.EdOrgId,
+                         fourDigitSchoolYear = Model.FourDigitSchoolYear
+                     }))",
+                    complete: function () {
+                        var dataTable = $($("#reportsTable1").DataTable().table().header());
+                        dataTable.find('th').removeAttr('aria-label');
+                    }
+                },
+                columns: [
+                    {
+                        title: 'ID',
+                        data: 'edOrgId',
+                        width: '100px'
+                        @*taking out these district view links for now*@
+                        @*@if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                        {
+                            <text>
+                        render: function(data, type, row, meta) {
+                            if (data != null && type === 'display' && row.orgType === 200) {
+                                return createStateLink(data);
+                            } else {
+                                return data;
+                            }
+                        }
+                            </text>
+                        }*@
+                    },
+                    {
+                        title: 'District/School',
+                        data: 'leaSchool',
+                        width: '300px',
+                    },
+                    {
+                        title: 'Cumulative Enrollments',
+                        data: 'distinctEnrollmentCount',
+                        render: function (data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                    @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                    {
+                                        @: createDrillDownLink(row.edOrgId, 0, row.orgType, 'Cumulative Enrollments Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                    }
+                                    else
+                                    {
+                                        @:data
+                                    }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Demographic Records',
+                        data: 'distinctDemographicsCount',
+                        render: function (data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                    @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                    {
+                                        @: createDrillDownLink(row.edOrgId, 1, row.orgType, 'Demographic Records Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                    } else {
+                                        @: data
+                                    }
+                                } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Active Duty Parents (ADP)',
+                        data: 'adParentCount',
+                        render: function (data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                    {
+                                        @: createDrillDownLink(row.edOrgId, 2, row.orgType, 'Active Duty Parents (ADP) Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                    }
+                                else
+                                {
+                                    @: data
+                                }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'American Indian - Alaska Native (Minnesota)',
+                        data: 'indianNativeCount',
+                        render: function (data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                {
+                                    @:createDrillDownLink(row.edOrgId, 3, row.orgType, 'American Indian - Alaska Native (Minnesota) Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                } else {
+                                    @: data
+                                }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Migrant',
+                        data: 'migrantCount',
+                        render: function (data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                {
+                                    @:createDrillDownLink(row.edOrgId, 4, row.orgType, 'Migrant Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                } else {
+                                    @: data
+                                }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Homeless',
+                        data: 'homelessCount',
+                        render: function (data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                { @: createDrillDownLink(row.edOrgId, 5, row.orgType, 'Homeless Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                } else {
+                                    @:data
+                                }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Immigrant',
+                        data: 'immigrantCount',
+                        render: function (data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                {
+                                    @: createDrillDownLink(row.edOrgId, 6, row.orgType, 'Immigrant Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                }
+                                else {
+                                    @:data
+                                }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Recently Arrived English Learner',
+                        data: 'recentEnglishCount',
+                        render: function (data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                { @: createDrillDownLink(row.edOrgId, 7, row.orgType, 'Recently Arrived English Learner Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                } else {
+                                    @:data
+                                }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'SLIFE',
+                        data: 'slifeCount',
+                        render: function (data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                { @: createDrillDownLink(row.edOrgId, 8, row.orgType, 'SLIFE Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                } else {
+                                    @:data
+                                }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                ]
+            });
+
+            $(dataTable.table().header()).addClass('table-primary');
+
+            dataTable = $('#reportsTable2').DataTable({
+                paging: true,
+                pagingType: 'full_numbers',
+                info: true,
+                scrollCollapse: true,
+                deferRender: true,
+                searching: false,
+                serverSide: true,
+                processing: true,
+                language: {
+                    loadingRecords: 'Loading...',
+                    processing: "Loading...",
+                    aria: {
+                        paginate: {
+                            first: 'First page',
+                            previous: 'Previous page',
+                            next: 'Next page',
+                            last: 'Last page'
+                        }
+                    }
+                },
+                dom: "<'row'<'col-md-3'l><'col-md-3 offset-6 text-right jumpToNotes'>>"+
+                    "<'row'<'col-sm-12'tr>>" +
+                    "<'row'<'col-md-3'i><'col-md-9 pull-right'p>>",
+                fnInitComplete: function() {
+                    $('div.dataTables_scrollBody').css('min-height', 0);
+                },
+                ajax: {
+                    url: "@Html.Raw(Url.Action("GetStudentProgramsReportData", new
+                     {
+                         isStateMode = Model.IsStateMode,
+                         edOrgId = Model.EdOrgId,
+                         fourDigitSchoolYear = Model.FourDigitSchoolYear
+                     }))",
+                    complete: function () {
+                        var dataTable = $($("#reportsTable2").DataTable().table().header());
+                        dataTable.find('th').removeAttr('aria-label');
+                    }
+                },
+                columns: [
+                    {
+                        title: 'ID',
+                        data: 'edOrgId',
+                        width: '100px',
+                        @* taking out these district view links for now *@
+                        @*@if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                        {
+                            <text>
+                        render: function(data, type, row, meta) {
+                            if (data != null && type === 'display' && row.orgType === 200) {
+                                return createStateLink(data);
+                            } else {
+                                return data;
+                            }
+                        }
+                            </text>
+                        }*@
+                    },
+                    {
+                        title: 'District/School',
+                        data: 'leaSchool',
+                        width: '300px',
+                    },
+                    {
+                        title: 'English Learner Identified',
+                        data: 'englishLearnerIdentifiedCount',
+                        render: function (data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                    @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                { @: createDrillDownLink(row.edOrgId, 9, row.orgType, 'English Learner Identified Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                } else {
+                                    @:data
+                                }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'English Learner Served',
+                        data: 'englishLearnerServedCount',
+                        render: function (data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                    @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                { @: createDrillDownLink(row.edOrgId, 10, row.orgType, 'English Learner Served Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                } else {
+                                    @:data
+                                }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Independent Study',
+                        data: 'independentStudyCount',
+                        render: function (data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                    @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                { @: createDrillDownLink(row.edOrgId, 11, row.orgType, 'Independent Study Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                } else {
+                                    @: data
+                                }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Section 504',
+                        data: 'section504Count',
+                        render: function (data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                    @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                { @: createDrillDownLink(row.edOrgId, 12, row.orgType, 'Section 504 Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                } else {
+                                    @:data
+                                }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Title I Part A',
+                        data: 'title1PartACount',
+                        render: function (data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                    @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                { @: createDrillDownLink(row.edOrgId, 13, row.orgType, 'Title I Part A Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                } else {
+                                    @:data
+                                }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Free and Reduced Meals',
+                        data: 'freeReducedCount',
+                        render: function (data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                    @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                { @: createDrillDownLink(row.edOrgId, 14, row.orgType, 'Free and Reduced Meals Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                } else {
+                                    @:data
+                                }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                ]
+            });
+
+            $(dataTable.table().header()).addClass('table-primary');
+            $('.jumpToNotes').html('<a href="#notes">View Report notes</a>');
+        });
+    </script>
+}

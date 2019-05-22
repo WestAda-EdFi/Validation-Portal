@@ -1,0 +1,175 @@
+﻿@using ValidationWeb.Filters
+@using ValidationWeb.Utility
+@model OdsResidentsEnrolledElsewhereReportViewModel
+@{
+    var identity = (ValidationPortalIdentity)User.Identity;
+    var permissions = User.Identity.GetViewPermissions(identity.AppRole);
+}
+
+<div id="pagetop" class="row tbmargin10">
+    @if (Model.IsStateMode)
+    {
+        <h2 class="vp-body-header col-md-8 justify-content-start align-self-center">Residents Enrolled Elsewhere for All Minnesota Districts</h2>
+    }
+    else
+    {
+        <h2 class="vp-body-header col-md-8 justify-content-start align-self-center">Residents Enrolled Elsewhere for District @Model.EdOrgName (@Model.EdOrgId.ToString())</h2>
+    }
+
+    @if (permissions.CanAccessAllDistrictsMode)
+    {
+        if(Model.IsStateMode)
+        {
+            @:<div class="col-md-4"><a href="@Url.Action("ResidentsEnrolledElsewhereReport", "Ods", new { isStateMode = false })" class="show-data-loading">View Single District</a></div>
+        }
+        else
+        {
+            @:<div class="col-md-4"><a href="@Url.Action("ResidentsEnrolledElsewhereReport", "Ods", new { isStateMode = true })" class="show-data-loading">View All Districts</a></div>
+        }
+    }
+</div>
+<div id="requestedReportContent" class="row">
+    <table class="table table-bordered" id="reportsTable" role="grid">
+        <caption class="hidden">Click header to sort by District of Enrollment ID, or District of Enrollment, or Residents Enrolled</caption>
+    </table>
+</div>
+<div role="note">
+    <div id="notes" class="row">
+        <div class="vp-body-header">Notes:</div>
+    </div>
+    <div class="row">The district where the student resides is determined from the student-school association extensions in the Ed Fi ODS database.</div>
+</div>
+<div class="row tbmargin10">
+    <div class="col-md-2">
+        <a href="#pagetop">Back to Top</a>
+    </div>
+</div>
+
+
+@section scripts {
+    <script>
+        $(function() {
+            var drillDownLinkTemplate =
+                '<a href="@Html.Raw(Url.Action(
+                              "ResidentsEnrolledElsewhereReport",
+                              "Ods",
+                              new
+                                {
+                                    schoolId = "_SchoolId_",
+                                    drillDownColumnIndex = "_DrillDownIndex_",
+                                    isStateMode = Model.IsStateMode,
+                                    districtToDisplay = "_EdOrgId_",
+                                    isStudentDrillDown = true,
+                                    orgType = "_OrgType_"
+                                }))" aria-label="_Label_">_LinkText_</a>';
+
+            function createDrillDownLink(edOrgId, schoolId, drillDownIndex, orgType, label, linkText) {
+                return drillDownLinkTemplate
+                    .replace(/_EdOrgId_/g, edOrgId)
+                    .replace(/_SchoolId_/g, schoolId)
+                    .replace(/_DrillDownIndex_/g, drillDownIndex)
+                    .replace(/_OrgType_/g, orgType)
+                    .replace(/_Label_/g, label)
+                    .replace(/_LinkText_/g, linkText);
+            }
+
+            var stateLinkTemplate =
+                '<a href="@Html.Raw(Url.Action(
+                              "ResidentsEnrolledElsewhereReport",
+                              "Ods",
+                              new
+                                { isStateMode = false, districtToDisplay = "_EdOrgId_" }))" class="show-data-loading">_EdOrgId_</a>';
+
+            function createStateLink(edOrgId) {
+                return stateLinkTemplate.replace(/_EdOrgId_/g, edOrgId);
+            }
+
+            $('div.dataTables_scrollBody').css('min-height', '350px');
+
+            var dataTable = $('#reportsTable').DataTable({
+                paging: true,
+                pagingType: 'full_numbers',
+                info: true,
+                scrollCollapse: true,
+                deferRender: true,
+                searching: false,
+                serverSide: true,
+                processing: true,
+                language: {
+                    loadingRecords: 'Loading...',
+                    processing: "Loading...",
+                    aria: {
+                        paginate: {
+                            first: 'First page',
+                            previous: 'Previous page',
+                            next: 'Next page',
+                            last: 'Last page'
+                        }
+                    }
+                },
+                dom: "<'row'<'col-md-3'l><'col-md-3 offset-6 text-right jumpToNotes'>>" +
+                    "<'row'<'col-sm-12'tr>>" +
+                    "<'row'<'col-md-3'i><'col-md-9 pull-right'p>>",
+                ajax: {
+                    url: "@Html.Raw(Url.Action("GetResidentsEnrolledElsewhereData", new
+                     {
+                         isStateMode = Model.IsStateMode,
+                         edOrgId = Model.EdOrgId,
+                         fourDigitSchoolYear = Model.FourDigitSchoolYear
+                     }))",
+                    complete: function () {
+                        var dataTable = $($("#reportsTable").DataTable().table().header());
+                        dataTable.find('th').removeAttr('aria-label');
+                    }
+                },
+                columns: [
+                    @if (Model.IsStateMode)
+                    {
+                        <text>
+                            {
+                                title: 'District of Residence ID',
+                                data: 'edOrgId'
+                            },
+                            {
+                                title: 'District of Residence',
+                                data: 'edOrgName',
+                                width: '250px'
+                            },
+                        </text>
+                    }
+                    {
+                        title: 'District of Enrollment ID',
+                        data: 'districtOfEnrollmentId',
+                    },
+                    {
+                        title: 'District of Enrollment',
+                        data: 'districtOfEnrollmentName',
+                        width: '250px',
+                    },
+                    {
+                        title: 'Residents Enrolled',
+                        data: 'residentsEnrolled',
+                        render: function (data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                    @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                    {
+                                        @:createDrillDownLink(row.edOrgId, row.districtOfEnrollmentId, 0, row.orgType, 'Drilldown for ' + data + ' students at ' + row.districtOfEnrollmentName, data);
+                                    }
+                                    else
+                                    {
+                                        @:data
+                                    }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                ]
+            });
+
+            $(dataTable.table().header()).addClass('table-primary');
+            $('.jumpToNotes').html('<a href="#notes">View Report notes</a>');
+        });
+    </script>
+}

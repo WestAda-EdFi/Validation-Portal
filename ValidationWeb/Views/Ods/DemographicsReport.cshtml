@@ -1,0 +1,232 @@
+﻿@using ValidationWeb.Filters
+@using ValidationWeb.Utility
+@model OdsDemographicsReportViewModel
+@{
+    var identity = (ValidationPortalIdentity)User.Identity;
+    var appRoleName = identity.AppRole.Name;
+    var permissions = User.Identity.GetViewPermissions(identity.AppRole);
+}
+
+<div id="pagetop" class="row ">
+</div>
+<div class="row tbmargin10">
+    @if (Model.IsStateMode)
+    {
+        <h2 class="vp-body-header justify-content-start align-self-center">Ancestry Ethnic Origin and Race Counts for All Minnesota Districts</h2>
+    }
+    else
+    {
+        <h2 class="vp-body-header justify-content-start align-self-center">Ancestry Ethnic Origin and Race Counts for District @Model.EdOrgName (@Model.EdOrgId.ToString())</h2>
+
+        if (Model.SchoolId.HasValue && !string.IsNullOrWhiteSpace(Model.SchoolName))
+        {
+            <div class="vp-body-header justify-content-start align-self-center">
+                For @Model.SchoolName (@Model.SchoolId)
+            </div>
+        }
+    }
+    @if (permissions.CanAccessAllDistrictsMode)
+    {
+        if (Model.IsStateMode)
+         {
+             <div class="col-md-2">
+                 <a href="@Url.Action("DemographicsReport", "Ods", new
+                                                                   {
+                                                                       isStateMode = false
+                                                                   })" class="show-data-loading">View Single District</a></div>
+         }
+         else
+         {
+             <div class="col-md-2">
+                 <a href="@Url.Action("DemographicsReport", "Ods", new
+                                                                   {
+                                                                       isStateMode = true
+                                                                   })" class="show-data-loading">View All Districts</a></div>
+         }
+    }
+</div>
+<div id="requestedReportContent" class="row">
+    @Html.Partial("Partials/DemographicsReportTable", Model)
+</div>
+
+@section scripts  {
+    <script type="text/javascript">
+        $(function() {
+
+            // change to add ariaLabel (basically column name and #)
+                
+            var drillDownLinkTemplate =
+                '<a href="@Html.Raw(Url.Action("DemographicsReport", "Ods", new { schoolId = "_EdOrgId_", drillDownColumnIndex = "_DrillDownIndex_", isStateMode = Model.IsStateMode, districtToDisplay = "_EdOrgId_", isStudentDrillDown = true, orgType = "_OrgType_" }))"'+
+                ' aria-label="_Label_">_LinkText_</a>';
+
+            function createDrillDownLink(edOrgId, drillDownIndex, orgType, label, linkText) {
+                return drillDownLinkTemplate
+                    .replace(/_EdOrgId_/g, edOrgId)
+                    .replace(/_DrillDownIndex_/g, drillDownIndex)
+                    .replace(/_OrgType_/g, orgType)
+                    .replace(/_Label_/g, label)
+                    .replace(/_LinkText_/g, linkText);
+            }
+
+            var stateLinkTemplate =
+                '<a href="@Html.Raw(Url.Action("DemographicsReport", "Ods", new { isStateMode = false, districtToDisplay = "_EdOrgId_" }))" class="show-data-loading">_EdOrgId_</a>';
+
+            function createStateLink(edOrgId) {
+                return stateLinkTemplate.replace(/_EdOrgId_/g, edOrgId);
+            }
+
+            $('div.dataTables_scrollBody').css('min-height', '350px');
+
+            var dataTable = $('#reportsTable').DataTable({
+                paging: true,
+                pagingType: 'full_numbers',
+                info: true,
+                scrollCollapse: true,
+                deferRender: true,
+                searching: false,
+                serverSide: true,
+                processing: true,
+                language: {
+                    loadingRecords: 'Loading...',
+                    processing: "Loading...",
+                    aria: {
+                        paginate: {
+                            first: 'First page',
+                            previous: 'Previous page',
+                            next: 'Next page',
+                            last: 'Last page'
+                        }
+                    }
+                },
+                dom: "<'row'<'col-md-3'l><'col-md-3 offset-6 text-right jumpToNotes'>>"+
+                    "<'row'<'col-sm-12'tr>>" +
+                    "<'row'<'col-md-3'i><'col-md-9 pull-right'p>>",
+                ajax: {
+                    url: "@Html.Raw(Url.Action(
+                              "GetDemographicsReportData",
+                              new
+                              {
+                                  edOrgId = Model.EdOrgId,
+                                  fourDigitSchoolYear = Model.FourDigitSchoolYear,
+                                  isStateMode = Model.IsStateMode,
+                              }))",
+                    complete: function() {
+                        var dataTable = $($("#reportsTable").DataTable().table().header()); 
+                        dataTable.find('th').removeAttr('aria-label');
+                    }
+                },
+                columns: [
+                    {
+                        title: 'ID',
+                        data: 'edOrgId',
+                        width: '100px'
+                        @* taking out these district view links for now *@
+                        @*@if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                        {
+                            <text>
+                            render: function(data, type, row, meta) {
+                                if (data != null && type === 'display' && row.orgType === 200) {
+                                    return createStateLink(data);
+                                } else {
+                                    return data;
+                                }
+                            }
+                            </text>
+                        }*@
+                    },
+                    {
+                        title: 'District/School',
+                        width: '300px',
+                        data: 'leaSchool'
+                    },
+                    {
+                        title: 'Cumulative Enrollments',
+                        data: 'enrollmentCount',
+                        render: function (data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                    @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                    {
+                                        @:createDrillDownLink(row.edOrgId, 0, row.orgType, 'Cumulative Enrollments Drilldown for '+data+' students at '+row.leaSchool, data);
+                                    } else {
+                                        @:data
+                                    }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Demographics Records',
+                        data: 'demographicsCount',
+                        render: function(data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                {
+                                    @: createDrillDownLink(row.edOrgId, 1, row.orgType, 'Demographics Records Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                } else {
+                                    @:data
+                                }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Students with Race Submitted',
+                        data: 'raceGivenCount',
+                        render: function(data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                {
+                                    @: createDrillDownLink(row.edOrgId, 2, row.orgType, 'Students with Race Submitted Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                } else {
+                                    @:data
+                                }
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Students with AEO Submitted',
+                        data: 'ancestryGivenCount',
+                        render: function(data, type, row, meta) {
+                            if (type === 'display') {
+                                return (data === 0) ? "-" :
+                                @if (!Model.IsStateMode && permissions.CanViewStudentDrilldownReports)
+                                {
+                                    @: createDrillDownLink(row.edOrgId, 3, row.orgType, 'Students with AEO Submitted Drilldown for ' + data + ' students at ' + row.leaSchool, data);
+                                } else {
+                                    @:data
+                                }
+                            } else {
+                                return data;
+                            }
+                        }
+                    }
+                ]
+            });
+
+            $('.jumpToNotes').html('<a href="#notes">View Report notes</a>');
+            $(dataTable.table().header()).addClass('table-primary');
+        });
+    </script>
+}
+<div role="note">
+    <div id="notes" class="row">
+        <div class="vp-body-header">Notes:</div>
+    </div>
+    <div class="row">(1) A student enrolled in multiple schools within the district is only counted once.</div>
+    <div class="row">(2) A student is counted as enrolled if the student was enrolled at least once during the school year.</div>
+    <div class="row">(3) Students are counted only once per table cell for the particular school/district/state.</div>
+</div>
+<div class="row tbmargin10">
+    <div class="col-md-2">
+        <a href="#pagetop">Back to Top</a>
+    </div>
+</div>
+
+

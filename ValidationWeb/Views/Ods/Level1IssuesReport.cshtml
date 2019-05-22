@@ -1,0 +1,92 @@
+﻿@model OdsLevel1IssuesReportViewModel
+
+<div class="row tbmargin10" id="pagetop">
+    <h2 class="vp-body-header justify-content-start align-self-center">Level 1 Validation Issues Report</h2>
+</div>
+
+<div class="row" id="requestedReportContent">
+    <table class="table table-bordered" id="reportsTable" role="grid">
+        <caption class="hidden">Click header to sort by District, Date/Time, API Endpoint, Response Code, or Response</caption>
+    </table>
+</div>
+
+@section scripts {
+    <script type="text/javascript">
+        $(function() {
+
+            function getDateTimeString(serverDateTime) {
+                var dateTime = new Date(serverDateTime);
+                return dateTime.toLocaleDateString("en-US")+'&nbsp;'+dateTime.toLocaleTimeString("en-US");
+            }
+
+            var dataTable = $('#reportsTable').DataTable({
+                paging: true,
+                pagingType: 'full_numbers',
+                info: true,
+                scrollCollapse: true,
+                deferRender: true,
+                searching: false,
+                serverSide: true,
+                processing: true,
+                language: {
+                    loadingRecords: 'Loading...',
+                    processing: "Loading...",
+                    aria: {
+                        paginate: {
+                            first: 'First page',
+                            previous: 'Previous page',
+                            next: 'Next page',
+                            last: 'Last page'
+                        }
+                    }
+                },
+                dom: "<'row'<'col-md-3'l><'col-md-3 offset-6 text-right jumpToNotes'>>" +
+                    "<'row'<'col-sm-12'tr>>" +
+                    "<'row'<'col-md-3'i><'col-md-9 pull-right'p>>",
+                ajax: {
+                    url: "@Html.Raw(Url.Action("GetApiErrorsReportData", new { }))",
+                    complete: function () {
+                        var dataTable = $($("#reportsTable").DataTable().table().header());
+                        dataTable.find('th').removeAttr('aria-label');
+                    }
+                },
+                columns: [
+                    {
+                        title: 'District',
+                        data: 'district',
+                    },
+                    {
+                        title: 'Date/Time',
+                        data: 'date',
+                        render: function(data, type, row, meta) {
+                            if (type === 'display') {
+                                return data == null ? "Unknown" : getDateTimeString(data);
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'API Endpoint',
+                        data: 'url',
+                    },
+                    {
+                        title: 'Response Code',
+                        name: 'responseCode',
+                        data: function(row, type, set) {
+                            return row.responseCode + " " + row.responsePhrase;
+                        }
+                    },
+                    {
+                        title: 'Response',
+                        data: 'responseBody',
+                    }
+                ]
+            });
+
+            $(dataTable.table().header()).addClass('table-primary');
+        });
+    </script>
+
+}
+

@@ -1,0 +1,53 @@
+﻿@model IEnumerable<SubmissionCycle>
+
+<div class="row">
+    <div class="col-10">
+        <div id="submissioncycle-warning" class="alert alert-danger alert-dismissible" style="display:none" role="alert">
+            <button id="submissioncycle-warning-button" type="button" class="close" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    </div>
+    <div class="col-2">
+        <button id="submissioncycle-add" class="btn prime-blue white-heavy-text" data-toggle="modal">Add Collection Cycle</button>
+    </div>
+</div>
+
+<div class="row tbmargin10">
+    <table class="table table-sm table-responsive-md table-bordered" id="reportsTable">
+        <tr class="table-primary">
+            <th class="id-hide-column">Id</th>
+            <th>School Year</th>
+            <th>Collection</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th></th>
+            <th></th>
+        </tr>
+        @foreach (var submissionCycle in Model)
+        {
+            <tr>
+                <td class="id-hide-column">@submissionCycle.Id</td>
+                <td>@submissionCycle.SchoolYearDisplay</td>
+                <td>@submissionCycle.CollectionId</td>
+                <td>@submissionCycle.StartDate.ToShortDateString()</td>
+                <td>@submissionCycle.EndDate.ToShortDateString()</td>
+                <td>
+                    <a href="javascript:void(0);"
+                       class="submissioncycle-edit btn btn-sm prime-blue white-heavy-text" data-id="@submissionCycle.Id">Edit</a>
+                </td>
+                <td>
+                    <a href="javascript:void(0);" data-id="@submissionCycle.Id" class="submissioncycle-delete btn btn-sm prime-blue white-heavy-text">Delete</a>
+                </td>
+            </tr>
+        }
+    </table>
+</div>
+
+<div id='submissioncycleModal' class="modal fade" role="dialog" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div id='submissioncycle-modal-content'></div>
+        </div>
+    </div>
+</div>  
