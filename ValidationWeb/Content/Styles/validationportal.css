@@ -703,8 +703,8 @@ th {
 
 
 .list-group-flush .list-group-item {
-    border-top: #78BE21 1px dotted;
-    border-bottom: #78BE21 1px dotted;
+    border-top: rgb(217, 160, 28) 1px dotted;
+    border-bottom: rgb(217, 160, 28) 1px dotted;
     border-right: 0;
     border-left: 0;
     border-radius: 0;
