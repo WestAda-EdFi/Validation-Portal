@@ -104,11 +104,15 @@ namespace ValidationWeb.Services
 
         public bool RemoveSchoolYear(int id)
         {
+            // TODO - Don't delete school year if it is the last one.
             using (var validationPortalDataContext = ValidationPortalDataContextFactory.Create())
             {
-                var schoolYearRecord = validationPortalDataContext.SchoolYears.FirstOrDefault(schoolYear => schoolYear.Id == id);
+                var schoolYears = validationPortalDataContext.SchoolYears.ToList();
+                var schoolYearRecord = schoolYears.FirstOrDefault(schoolYear => schoolYear.Id == id);
 
-                if (schoolYearRecord == null)
+                // If no record is found and it is the last record in the school year table return false,
+                // because we have to have at minimum 1 school year.
+                if (schoolYearRecord == null || schoolYears.Count == 1)
                 {
                     return false;
                 }
@@ -123,7 +127,8 @@ namespace ValidationWeb.Services
         {
             using (var validationPortalDataContext = ValidationPortalDataContextFactory.Create())
             {
-                return validationPortalDataContext.SchoolYears.FirstOrDefault(schoolYear => schoolYear.Id == id);
+                var schoolYear = validationPortalDataContext.SchoolYears.FirstOrDefault(sy => sy.Id == id);
+                return schoolYear ?? validationPortalDataContext.SchoolYears.First();
             }
         }
     }

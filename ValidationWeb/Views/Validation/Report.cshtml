@@ -18,21 +18,22 @@
 <div id="errorGridControls" class="row grid-controls">
     <span id="pageSizeLabel">Rows: </span>
     <input class="form-control form-control-sm" id="pageSizeInput" placeholder="30 (records per page)">
-    <div class="dropdown d-inline-block">
-        <button id="componentViewFilter" class="btn dropdown-toggle validation-drowdown-toggle prime-blue white-heavy-text" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Component: All
-            <span class="caret"></span>
-        </button>
-        <div class="dropdown-menu validation-dropdown-menu" style="margin-top: 0;" aria-labelledby="actionDropdown">
-            <a href="#" id="showAllGrid" aria-labelledby="actionDropdown" class="white-heavy-text prime-blue dropdown-item">All</a>
-            <a href="#" id="showEnrollment" aria-labelledby="actionDropdown" class="white-heavy-text prime-blue dropdown-item">Enrollment</a>
-            <a href="#" id="showDemographics" aria-labelledby="actionDropdown" class="white-heavy-text prime-blue dropdown-item">Demographics</a>
-        </div>
-        <input id="componentViewSelected" type="hidden" value="All">
-    </div>
+    @* <div class="dropdown d-inline-block"> *@
+    @*     <button id="componentViewFilter" class="btn dropdown-toggle validation-drowdown-toggle prime-blue white-heavy-text" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> *@
+    @*         Component: All *@
+    @*         <span class="caret"></span> *@
+    @*     </button> *@
+    @*     <div class="dropdown-menu validation-dropdown-menu" style="margin-top: 0;" aria-labelledby="actionDropdown"> *@
+    @*         <a href="#" id="showAllGrid" aria-labelledby="actionDropdown" class="white-heavy-text prime-blue dropdown-item">All</a> *@
+    @*         <a href="#" id="showEnrollment" aria-labelledby="actionDropdown" class="white-heavy-text prime-blue dropdown-item">Enrollment</a> *@
+    @*         <a href="#" id="showDemographics" aria-labelledby="actionDropdown" class="white-heavy-text prime-blue dropdown-item">Demographics</a> *@
+    @*     </div> *@
+    @*     <input id="componentViewSelected" type="hidden" value="All"> *@
+    @* </div> *@
 
     <button id="clearButton" class="btn prime-blue white-heavy-text">Clear Filters</button>
     <button id="downloadAsCSV" type="button" class="btn prime-blue white-heavy-text lrmargin10">Export</button>
+    <button id="emailErrors" type="button" class="btn prime-blue white-heavy-text lrmargin10" data-toggle="modal" data-target="#EmailErrorsModal">Email Report</button>
     <button id="firstPageButton" class="btn prime-blue white-heavy-text ml-auto">&lt;&lt;</button>
     <button id="previousPageButton" class="btn prime-blue white-heavy-text">&lt;</button>
     <span class="margin4px">&nbsp;Page&nbsp;</span>
@@ -97,14 +98,87 @@
             </tr>
         </tbody>
     </table>
-
     <div id="noRecords" style="display: none" class="vp-body-header col-8 justify-content-start align-self-center" role="status" aria-live="polite">No records were found.</div>
-
 </div>
+
+
+
+<!-- Errors Modal -->
+<div id="EmailErrorsModal" class="modal fade" role="dialog" aria-label="Select Collection and School Year" aria-modal="true" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header prime-blue white-heavy-text">
+                <h4 class="modal-title">Select Collection and School Year</h4>
+                <button type="button" class="close" aria-label="close" onclick="lastModalExitButton='cancel'" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-10">
+                        <label for="emailIdSelect">Select email address to receive report:</label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-10">
+                        <select id="emailSelect" name="emailIdSelect" class="form-control">
+                            @foreach (var email in Model.Emails)
+                            {
+                                <option value="@email">
+                                    @email
+                                </option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn prime-blue white-heavy-text" data-dismiss="modal" onclick="lastModalExitButton='launch'">Launch Validation</button>
+                <button type="button" class="btn prime-blue white-heavy-text" data-dismiss="modal" onclick="lastModalExitButton='cancel'">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
 
 @section scripts
 {
     <script>
+        $('#EmailErrorsModal').on('hidden.bs.modal',
+            function(e) {
+                if (lastModalExitButton == 'launch') {
+                    console.log("working");
+
+                    e.preventDefault();
+                    console.log('Email report object: ', e);
+                    window.location.href = "@Html.Raw(Url.Action(
+                    "EmailCsvReport",
+                    "Validation",
+                    new { Id = Model.Details.Id, ReportSummaryId = Model.Details.ValidationReportSummary.ValidationReportSummaryId, emailRecipient = "a.talpur@wearedoubleline.com" }))";
+                    overlayOn();
+
+                    var cycleId = $('#confirm-validation').attr("data-id");
+                    $.ajax({
+                        url: '(Url.Action("EmailCsvReport", "Validation"))',
+                        type: "GET",
+                        beforeSend: function(request) {
+                           request.setRequestHeader('Authorization', '(Model.TheUser.UserId)');
+                        },
+                        async: true,
+                        data: { Id: Model.Details.Id, ReportSummaryId: Model.Details.ValidationReportSummary.ValidationReportSummaryId, emailRecipient: "a.talpur@wearedoubleline.com" },
+                        success: function(result) {
+                            location.href.reload();
+                        },
+                        error: function(err) {
+                            // Perhaps in the future we might want to display to the user an error if the validation failed,
+                            // thus we might need the "err" variable. TODO
+                            overlayOff();
+                        }
+                    });
+                }
+            });
+
         function ClearFilter() {
             $(".query-filter-table-row input").val("");
             $("#errorTypeFilter").val("all");

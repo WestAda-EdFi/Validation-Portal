@@ -572,7 +572,10 @@
     <Content Include="fonts\fontawesome-webfont.ttf" />
     <Content Include="fonts\fontawesome-webfont.eot" />
     <Content Include="Deployment\DeployToStage.proj" />
-    <Content Include="Deployment\DeployToProd.proj" />
+    <Content Include="Deployment\DeployToProd.proj">
+      <SubType>Designer</SubType>
+    </Content>
+    <None Include="Properties\PublishProfiles\.pubxml" />
     <None Include="Scripts\jquery-3.3.1.intellisense.js">
       <DependentUpon>jquery-3.3.1.js</DependentUpon>
     </None>
@@ -810,8 +813,10 @@
     <Compile Include="Controllers\AdminController.cs" />
     <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Database\EdFiLogDbContext.cs" />
+    <Compile Include="Services\Implementations\EmailService.cs" />
     <Compile Include="Models\ValidationPortalIdentity.cs" />
     <Compile Include="Services\Implementations\RecordsRequestService.cs" />
+    <Compile Include="Services\Interfaces\IEmailService.cs" />
     <Compile Include="Services\Interfaces\IRecordsRequestService.cs" />
     <Compile Include="Utility\IIdentityExtensions.cs" />
     <Compile Include="Models\Log.cs" />
@@ -968,7 +973,12 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Content\Rules\SampleChecks.rules" />
+    <EmbeddedResource Include="Content\Rules\SampleChecks.rules">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Content\Rules\StaffChecks.rules">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <!--<ItemGroup>
     <TypeScriptCompile Include="Scripts\index.d.ts" />

@@ -5,6 +5,7 @@
     var identity = (ValidationPortalIdentity)User.Identity;
     var appRoleName = identity.AppRole.Name;
     var permissions = User.Identity.GetViewPermissions(identity.AppRole);
+    bool showValidateButton = Model.SubmissionCycles == null;
 }
 
 <script>
@@ -33,27 +34,46 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-md-10">
-                                        <select id="cycleIdSelect" name="cycleIdSelect" class="form-control">
-                                            @foreach (var cycle in Model.SubmissionCycles)
+                                        <select id="cycleIdSelect" name="cycleIdSelect" class="form-control">                                            
+                                        @{
+                                            if (showValidateButton)
                                             {
-                                                var schoolYearAndCollectionName = "";
-                                                var coll = Model.RulesCollections.FirstOrDefault(c => c.CollectionId == cycle.CollectionId);
-                                                if (coll != null)
+                                                foreach (var cycle in Model.SubmissionCycles)
                                                 {
-                                                    schoolYearAndCollectionName = $"{cycle.SchoolYearDisplay} / {coll.ToFriendlyName()}";
-                                                    <option value="@(cycle.Id)"
-                                                            @if (cycle.SchoolYearId == Model.FocusedSchoolYearId) { <text> selected </text> }>
-                                                        @(schoolYearAndCollectionName)
-                                                    </option>
+                                                    var coll = Model.RulesCollections.FirstOrDefault(c => c.CollectionId == cycle.CollectionId);
+                                                    if (coll != null)
+                                                    {
+                                                        var schoolYearAndCollectionName = $"{cycle.SchoolYearDisplay} / {coll.ToFriendlyName()}";
+                                                        <option value="@(cycle.Id)"
+                                                                @if (cycle.SchoolYearId == Model.FocusedSchoolYearId) { <text> selected </text>  }>
+                                                            @(schoolYearAndCollectionName)
+                                                        </option>
+                                                    }
                                                 }
                                             }
+                                            else
+                                            {
+                                                <option><text> No Active Collection Cycles </text></option>
+                                            }
+
+                                        }
                                         </select>
                                     </div>
                                 </div>
                             </div>
                             <div class="modal-footer">
-                                <button id="confirm-validation" type="button" class="btn prime-blue white-heavy-text" data-dismiss="modal" data-toggle="modal" data-target="#ConfirmNewValidationModal">Next &gt;&gt;</button>
-                                <button type="button" class="btn prime-blue white-heavy-text" data-dismiss="modal" onclick="lastModalExitButton='cancel'">Cancel</button>
+                                @{
+                                    if (showValidateButton)
+                                    {
+                                        <button id="confirm-validation" type="button" class="btn prime-blue white-heavy-text" data-dismiss="modal" data-toggle="modal" data-target="#ConfirmNewValidationModal">Next &gt;&gt;</button>
+                                    }
+                                    else
+                                    {
+                                        <button id="confirm-validation" type="button" class="btn prime-blue white-heavy-text" data-dismiss="modal" data-toggle="modal" data-target="#ConfirmNewValidationModal" disabled>Next &gt;&gt;</button>
+                                    }
+                                }
+                                @* <button id="confirm-validation" type="button" class="btn prime-blue white-heavy-text" data-dismiss="modal" data-toggle="modal" data-target="#ConfirmNewValidationModal">Next &gt;&gt;</button> *@
+                                <button type="button" class="btn prime-blue white-heavy-text" data-dismiss="modal" onclick="lastModalExitButton = 'cancel'">Cancel</button>
                             </div>
                         </div>
                     </div>
@@ -78,6 +98,7 @@
                     </div>
                 </div>
             </div>
+
 
             @if (permissions.CanRunValidationReports)
             {

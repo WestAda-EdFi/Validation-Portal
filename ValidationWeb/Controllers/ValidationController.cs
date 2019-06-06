@@ -5,6 +5,7 @@ using System.Web.Mvc;
 using Engine.Models;
 using ValidationWeb.Filters;
 using ValidationWeb.Services;
+using ValidationWeb.Services.Interfaces;
 
 namespace ValidationWeb
 {
@@ -25,6 +26,7 @@ namespace ValidationWeb
         protected readonly ISchoolYearService _schoolYearService;
         private readonly ISubmissionCycleService _submissionCycleService;
         protected readonly IValidationResultsService _validationResultsService;
+        protected readonly IEmailService _emailService;
         protected readonly Model _engineObjectModel;
 
         public ValidationController(
@@ -35,6 +37,7 @@ namespace ValidationWeb
             IRulesEngineService rulesEngineService,
             ISchoolYearService schoolYearService,
             ISubmissionCycleService submissionCycleService,
+            IEmailService emailService,
             Model engineObjectModel)
         {
             _appUserService = appUserService;
@@ -45,6 +48,7 @@ namespace ValidationWeb
             _schoolYearService = schoolYearService;
             _submissionCycleService = submissionCycleService;
             _validationResultsService = validationResultsService;
+            _emailService = emailService;
         }
 
         // GET: Validation/Reports
@@ -55,6 +59,7 @@ namespace ValidationWeb
             var theUser = _appUserService.GetUser();
             var districtName = (edOrg == null) ? "Invalid Education Organization Selected" : edOrg.OrganizationName;
 
+
             var model = new ValidationReportsViewModel
             {
                 DistrictName = districtName,
@@ -63,7 +68,7 @@ namespace ValidationWeb
                 SchoolYears = _schoolYearService.GetSubmittableSchoolYears().ToList(),
                 SubmissionCycles = _submissionCycleService.GetSubmissionCyclesOpenToday(),
                 FocusedEdOrgId = _appUserService.GetSession().FocusedEdOrgId,
-                FocusedSchoolYearId = _appUserService.GetSession().FocusedSchoolYearId
+                FocusedSchoolYearId = _appUserService.GetSession().FocusedSchoolYearId,
             };
             return View(model);
         }
@@ -98,7 +103,10 @@ namespace ValidationWeb
 
         public JsonResult ReportSummaries(int edOrgId, IDataTablesRequest request)
         {
-            var results = _validationResultsService.GetValidationReportSummaries(edOrgId).OrderByDescending(rs => rs.CompletedWhen).ToList();
+            var session = _appUserService.GetSession();
+            // var focusedSchoolYear = _schoolYearService.GetSchoolYearById(session.FocusedSchoolYearId);
+
+            var results = _validationResultsService.GetValidationReportSummaries(edOrgId).OrderByDescending(rs => rs.CompletedWhen).Where(rs => rs.SchoolYearId == session.FocusedSchoolYearId).ToList();
 
             IEnumerable<ValidationReportSummary> sortedResults = results;
 
@@ -189,11 +197,45 @@ namespace ValidationWeb
                 return RedirectToAction("Reports");
             }
 
-            var model = new ValidationReportDetailsViewModel { Details = _validationResultsService.GetValidationReportDetails(id) };
+            var emails = new List<string>();
+            emails.Add("Test@test.com");
+            emails.Add("Test2@test.com");
+            emails.Add("Test3@test.com");
+            emails.Add("Test4@test.com");
+
+            var model = new ValidationReportDetailsViewModel
+            {
+                Details = _validationResultsService.GetValidationReportDetails(id),
+                Emails = emails
+            };
             return View(model);
         }
 
         public FileStreamResult DownloadReportCsv(int id, int reportSummaryId)
+        {
+            var memoryStream = CreateCsvInMemoryStream(reportSummaryId);
+
+            var reportSummary = _validationResultsService.GetValidationReportDetails(reportSummaryId);
+
+            return new FileStreamResult(memoryStream, "text/csv")
+            {
+                FileDownloadName = $"ValidationErrors_{reportSummary.DistrictName.Replace(' ', '-')}_{reportSummary.CollectionName}_{reportSummary.CompletedWhen?.ToShortDateString()}.csv"
+            };
+        }
+
+        // SendReportEmail
+        public void EmailCsvReport(int id, int reportSummaryId, string emailRecipient)
+        {
+            var csvMemoryStream = CreateCsvInMemoryStream(reportSummaryId); ;
+
+            var reportSummary = _validationResultsService.GetValidationReportDetails(reportSummaryId);
+
+            var csvName = $"ValidationErrors_{reportSummary.DistrictName.Replace(' ', '-')}_{reportSummary.CollectionName}_{reportSummary.CompletedWhen?.ToShortDateString()}.csv";
+
+            _emailService.SendReportEmail(emailRecipient, csvName,  "Email report for West Ada.", csvMemoryStream);
+        }
+
+        private MemoryStream CreateCsvInMemoryStream(int reportSummaryId)
         {
             var results = _validationResultsService.GetValidationErrors(reportSummaryId);
 
@@ -209,13 +251,13 @@ namespace ValidationWeb
                         School = CombineDetailField(detailRow.ErrorEnrollmentDetails, x => x.School),
                         SchoolId = CombineDetailField(detailRow.ErrorEnrollmentDetails, x => x.SchoolId),
                         DateEnrolled = CombineDetailField(
-                                 detailRow.ErrorEnrollmentDetails,
-                                 x => x.DateEnrolled?.ToShortDateString()),
+                            detailRow.ErrorEnrollmentDetails,
+                            x => x.DateEnrolled?.ToShortDateString()),
                         DateWithdrawn = CombineDetailField(
-                                 detailRow.ErrorEnrollmentDetails,
-                                 x => x.DateWithdrawn == null
-                                          ? "Present"
-                                          : x.DateWithdrawn.Value.ToShortDateString()),
+                            detailRow.ErrorEnrollmentDetails,
+                            x => x.DateWithdrawn == null
+                                ? "Present"
+                                : x.DateWithdrawn.Value.ToShortDateString()),
                         Grade = CombineDetailField(detailRow.ErrorEnrollmentDetails, x => x.Grade),
                         detailRow.Severity.CodeValue,
                         detailRow.ErrorCode,
@@ -224,14 +266,7 @@ namespace ValidationWeb
             }
 
             var csvArray = WriteCsvToMemory(groupedByStudent);
-            var memoryStream = new MemoryStream(csvArray);
-
-            var reportSummary = _validationResultsService.GetValidationReportDetails(reportSummaryId);
-
-            return new FileStreamResult(memoryStream, "text/csv")
-            {
-                FileDownloadName = $"ValidationErrors_{reportSummary.DistrictName.Replace(' ', '-')}_{reportSummary.CollectionName}_{reportSummary.CompletedWhen?.ToShortDateString()}.csv"
-            };
+            return new MemoryStream(csvArray);
         }
 
         [PortalAuthorize(Roles = "DistrictUser")]

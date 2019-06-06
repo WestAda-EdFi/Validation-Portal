@@ -100,6 +100,7 @@
             container.Register<IEdFiApiLogService, EdFiApiLogService>(Lifestyle.Scoped);
             container.Register<IRecordsRequestService, RecordsRequestService>(Lifestyle.Scoped);
             container.Register<IOdsConfigurationValues, OdsConfigurationValues>(Lifestyle.Scoped);
+            container.Register<IEmailService, EmailService>(Lifestyle.Scoped);
             
             // singletons
             container.Register<ICacheManager, CacheManager>(Lifestyle.Singleton);

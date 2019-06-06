@@ -1,5 +1,6 @@
 collection Fall_Collection includes
-SampleChecks
+SampleChecks,
+StaffChecks
 
 collection EOY_Enrollment_And_Demographic includes
 StudentDemographic,

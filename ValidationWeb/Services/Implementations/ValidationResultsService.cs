@@ -42,7 +42,7 @@
                     .FirstOrDefault(x => x.ValidationReportSummaryId == validationReportId);
                 
                 reportDetails.CompletedWhen = reportDetails.CompletedWhen.HasValue
-                                                  ? reportDetails.CompletedWhen.Value.ToLocalTime() // why!? 
+                                                  ? reportDetails.CompletedWhen.Value.ToLocalTime()
                                                   : reportDetails.CompletedWhen;
                 
                 reportDetails.ValidationReportSummary.RequestedWhen =
